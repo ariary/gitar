@@ -51,8 +51,7 @@ On my target machine:
 
 **Improve UX**
 -   Soft to workaround limit due to `cat` use for reverse shell connection => autocompletion in reverse shell will not work as we have a pipe not a terminal. (To solve the pb we must have a prgm that creates a pseudoterminal, spawns a program connected to this pseudoterminal [see](https://stackoverflow.com/questions/5843741/how-can-i-pipe-initial-input-into-process-which-will-then-be-interactive) )
--   endpoint qui output le tree du fichier possible pour pull
-
+-  Endpoint outputting the tree structure of the file server (for `pull`file possibility)
 -  Download directory support 
 -  Completion on target shell to help `pull` (path completion)
 - An option to directly launch the reverse shell session with shortcut from `gitar`
