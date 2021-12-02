@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -65,7 +66,7 @@ func UploadHandler() http.HandlerFunc {
 
 // UPLOAD DIRECTORY//
 
-//untar a file "tarball" to "target"
+//untar a "tarball" file  to "target"
 func untar(tarball, target string) error {
 	reader, err := os.Open(tarball)
 	if err != nil {
@@ -146,7 +147,7 @@ func UploadDirectoryHandler() http.HandlerFunc {
 }
 
 // ALIAS //
-//Handler for uploading binary files
+//Handler that output shortcut aimed for the target machines (source it)
 func AliasHandler(ip string, port string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//pull
@@ -158,6 +159,16 @@ func AliasHandler(ip string, port string) http.HandlerFunc {
 		//pushr
 		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" http://" + ip + ":" + port + "/pushr\n}\n"
 		fmt.Fprintf(w, pushrFunc)
+	}
+}
+
+// TREE //
+//Handler that print the tree of the file server
+func TreeHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		out, err := exec.Command("tree").Output()
+		check(err, "Error while executing tree command")
+		fmt.Fprintf(w, string(out))
 	}
 }
 
@@ -178,6 +189,9 @@ func main() {
 
 	//Alias endpoint
 	http.HandleFunc("/alias", AliasHandler(*serverIp, *port))
+
+	//Tree endpoint
+	http.HandleFunc("/tree", TreeHandler())
 
 	//Set up messages
 	fmt.Println("On remote:")
