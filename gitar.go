@@ -19,6 +19,8 @@ func check(e error, msg string) {
 	}
 }
 
+// UPLOAD //
+
 //Upload binary file <= 32Mb and return byte content
 //Note: upload with curl -X POST -F "file=@[BINARY_FILENAME]" http://[TARGET_IP:PORT]/push
 func uploadFile(w http.ResponseWriter, r *http.Request) {
@@ -57,8 +59,22 @@ func UploadHandler() http.HandlerFunc {
 	}
 }
 
+// ALIAS //
+//Handler for uploading binary files
+func AliasHandler(ip string, port string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//pull
+		pullFunc := "pull(){\ncurl -s http://" + ip + ":" + port + "/pull/$1 > $1\n}\n"
+		fmt.Fprintf(w, pullFunc)
+		//push
+		pushFunc := "push(){\ncurl -X POST -F \"file=@$1\" http://" + ip + ":" + port + "/push\n}"
+		fmt.Fprintf(w, pushFunc)
+	}
+}
+
 func main() {
-	port := ":" + *flag.String("p", "9237", "port to serve on")
+	serverIp := flag.String("e", "127.0.0.1", "server external reachable ip")
+	port := flag.String("p", "9237", "port to serve on")
 	directory := flag.String("d", ".", "the directory of static file to host")
 	flag.Parse()
 
@@ -68,8 +84,15 @@ func main() {
 	//Download route
 	http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(*directory))))
 
+	//Alias endpoint
+	http.HandleFunc("/alias", AliasHandler(*serverIp, *port))
+
+	//Set up messages
+	fmt.Println("On remote:")
+	fmt.Println("curl -s http://" + *serverIp + ":" + *port + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias")
+
 	//Listen
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(":"+*port, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
