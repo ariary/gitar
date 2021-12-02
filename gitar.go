@@ -161,7 +161,7 @@ func AliasHandler(ip string, port string) http.HandlerFunc {
 		fmt.Fprintf(w, pushrFunc)
 		//gtree
 		gtreeFunc := "gtree(){\ncurl http://" + ip + ":" + port + "/gtree\n}\n"
-		fmt.Fprintf(w, pushrFunc)
+		fmt.Fprintf(w, gtreeFunc)
 	}
 }
 
