@@ -43,7 +43,7 @@ On my target machine:
 
 ## Enhancement 🛣️
 
-**~>** *All improvements must keep `gitar` simple and don't add unlikely pre-requisites*
+**~>** *All improvements must keep `gitar` simple and don't add unlikely pre-requisites (especially for the target machine)*
 
 **Useful cause we will expose our http server and thus we become the prey**
 -   HTTPS, basic authent (for the file server part)
