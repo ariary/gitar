@@ -54,6 +54,7 @@ On my target machine:
 - Command line to run server on a docker (or harden `gitar` with seccomp + apparmor + drop capabilities) 
 
 **Improve UX**
+- Copy to clipboard "setup shortcut command" when launching gitar
 - Soft to workaround limit due to `cat` use for reverse shell connection => autocompletion in reverse shell will not work as we have a pipe not a terminal. (To solve the pb we must have a prgm that creates a pseudoterminal, spawns a program connected to this pseudoterminal [see](https://stackoverflow.com/questions/5843741/how-can-i-pipe-initial-input-into-process-which-will-then-be-interactive) )
 - Handle case when curl isn't on target machine (wget version?)
 - Download directory support 
