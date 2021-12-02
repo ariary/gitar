@@ -1,10 +1,10 @@
 # 🎸 gitar 
 
-> Make file exchange more Rock'N'Roll during pentest/ctf
-
 <div align="center">
-<br><b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from my <q>victim machine</q>
+<code><b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from my <q>victim machine</q></code>
 </div>
+
+----
 
 ## TL;DR *- and listen music*
 
@@ -41,9 +41,9 @@ On my target machine:
 
 **And enjoy you revshell [🎶](#tldr---and-listen-music)**
 
-## Enhancement 
+## Enhancement 🛣️
 
-**~>** *All improvments must keep `gitar` simple and don't add unlikely pre-requisites*
+**~>** *All improvements must keep `gitar` simple and don't add unlikely pre-requisites*
 
 **Useful cause we will expose our http server and thus we become the prey**
 -   HTTPS, basic authent (for the file server part)
