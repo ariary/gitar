@@ -1,7 +1,7 @@
 # 🎸 gitar 
 
 <div align="center">
-<code><b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from my <q>victim machine</q></code>
+<code><b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from my <q>target machine</q></code>
 </div>
 
 ----
