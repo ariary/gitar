@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/tar"
 	"bytes"
 	"flag"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func check(e error, msg string) {
@@ -34,6 +37,87 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
 
+	//write file
+	buf := bytes.NewBuffer(nil)
+	_, err = io.Copy(buf, file)
+	check(err, "")
+
+	f, err := os.Create(handler.Filename)
+	check(err, "Error creating file")
+
+	defer f.Close()
+
+	_, err = f.Write(buf.Bytes())
+	check(err, "Error writing to file")
+}
+
+//Handler for uploading files
+func UploadHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case "GET":
+			http.Error(w, "GET Bad request - Only POST accepted!", 400)
+		case "POST":
+			uploadFile(w, r)
+		}
+	}
+}
+
+// UPLOAD DIRECTORY//
+
+//untar a file "tarball" to "target"
+func untar(tarball, target string) error {
+	reader, err := os.Open(tarball)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+	tarReader := tar.NewReader(reader)
+
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		path := filepath.Join(target, header.Name)
+		info := header.FileInfo()
+		if info.IsDir() {
+			if err = os.MkdirAll(path, info.Mode()); err != nil {
+				return err
+			}
+			continue
+		}
+
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(file, tarReader)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+//Untar directory from http request (dl it, untar it, remove it)
+func untarDirectory(w http.ResponseWriter, r *http.Request) {
+	// Maximum upload of 10 MB files
+	r.ParseMultipartForm(32 << 20)
+
+	// Get handler for filename, size and headers
+	file, handler, err := r.FormFile("file")
+	check(err, "Error Retrieving the File")
+
+	defer file.Close()
+
+	filename := handler.Filename[:strings.LastIndex(handler.Filename, ".")] //handler.Filename - .tar
+	fmt.Printf("Uploaded Directory: %+v\n", filename)
+
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
 	check(err, "")
@@ -45,16 +129,18 @@ func uploadFile(w http.ResponseWriter, r *http.Request) {
 
 	_, err = f.Write(buf.Bytes())
 	check(err, "Error writing to file")
+	untar(handler.Filename, filename)
+	check(os.Remove(handler.Filename), "Error while remove directory tar")
 }
 
-//Handler for uploading binary files
-func UploadHandler() http.HandlerFunc {
+//Handler for uploading directory (tar format)
+func UploadDirectoryHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
-			uploadFile(w, r)
+			untarDirectory(w, r)
 		}
 	}
 }
@@ -67,8 +153,11 @@ func AliasHandler(ip string, port string) http.HandlerFunc {
 		pullFunc := "pull(){\ncurl -s http://" + ip + ":" + port + "/pull/$1 > $1\n}\n"
 		fmt.Fprintf(w, pullFunc)
 		//push
-		pushFunc := "push(){\ncurl -X POST -F \"file=@$1\" http://" + ip + ":" + port + "/push\n}"
+		pushFunc := "push(){\ncurl -X POST -F \"file=@$1\" http://" + ip + ":" + port + "/push\n}\n"
 		fmt.Fprintf(w, pushFunc)
+		//pushr
+		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" http://" + ip + ":" + port + "/pushr\n}\n"
+		fmt.Fprintf(w, pushrFunc)
 	}
 }
 
@@ -80,6 +169,9 @@ func main() {
 
 	//Upload route
 	http.HandleFunc("/push", UploadHandler())
+
+	//Upload directory route
+	http.HandleFunc("/pushr", UploadDirectoryHandler())
 
 	//Download route
 	http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(*directory))))
