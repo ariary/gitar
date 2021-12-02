@@ -159,6 +159,9 @@ func AliasHandler(ip string, port string) http.HandlerFunc {
 		//pushr
 		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" http://" + ip + ":" + port + "/pushr\n}\n"
 		fmt.Fprintf(w, pushrFunc)
+		//gtree
+		gtreeFunc := "gtree(){\ncurl http://" + ip + ":" + port + "/gtree\n}\n"
+		fmt.Fprintf(w, pushrFunc)
 	}
 }
 
@@ -191,7 +194,7 @@ func main() {
 	http.HandleFunc("/alias", AliasHandler(*serverIp, *port))
 
 	//Tree endpoint
-	http.HandleFunc("/tree", TreeHandler())
+	http.HandleFunc("/gtree", TreeHandler())
 
 	//Set up messages
 	fmt.Println("On remote:")
