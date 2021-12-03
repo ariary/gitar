@@ -31,7 +31,9 @@ On my target machine:
 * HTTP Network connectivy between attacker & target machine
 * On target machine: `curl` 
 	* `tar` for upload directory 
-* On attacker machine: `xclip` to copy command on clipboard (not required)
+* On attacker machine: 
+	* `xclip` to copy command on clipboard (not required)
+	* `tree`: to expose it trough server (not required)
 
 The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
