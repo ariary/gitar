@@ -4,7 +4,7 @@
 <code>
 <b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from the <q>target machine</q>
 
-<b>~></b><b><i>No installation needed</i></b> on <q>target machine</q>
+<b>~></b><b><i> No installation needed</i></b> on <q>target machine</q>
 </code>
 </div>
 
