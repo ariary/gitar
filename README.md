@@ -7,6 +7,7 @@
 
 <b>~></b><b><i> No installation needed</i></b> on <q>target machine</q>
 </code>
+
 <img src="https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif">
 </div>
 
