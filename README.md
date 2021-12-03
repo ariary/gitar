@@ -21,13 +21,11 @@ On my target machine:
 
 ## Set up
 
-### Pre-requisite
+### Pre-requisites
 
 * Network connectivy trough http between attacker & target machine
-*[target machine] <--http--> [Attacker machine]*
-
 * On target machine: `nc`,`cat`, `curl` 
-	* and `tar` for upload directory 
+	* `tar` for upload directory 
 
 ### Steps
 
