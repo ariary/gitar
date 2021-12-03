@@ -1,11 +1,13 @@
-<h1 align=center> 🎸  gitar ⇆</h1>
+<h1 align=center> 🎸 gitar ⇆</h1>
 
+----
 <div align="center">
 <code>
 <b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from the <q>target machine</q>
 
 <b>~></b><b><i> No installation needed</i></b> on <q>target machine</q>
 </code>
+<img src="https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif">
 </div>
 
 
@@ -19,12 +21,14 @@ On my target machine:
 
 *Before be able to use these shortcut you have to [set up](#set-up) both machines. Once again, the aim is to made it as simple as possible*
 
+----
+
 ## Set up
 
 ### Pre-requisites
 
-* Network connectivy trough http between attacker & target machine
-* On target machine: `nc`,`cat`, `curl` 
+* HTTP Network connectivy between attacker & target machine
+* On target machine: `curl` 
 	* `tar` for upload directory 
 * On attacker machine: `xclip` to copy command on clipboard (not required)
 
