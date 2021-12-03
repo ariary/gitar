@@ -26,7 +26,9 @@ On my target machine:
 * Network connectivy trough http between attacker & target machine
 * On target machine: `nc`,`cat`, `curl` 
 	* `tar` for upload directory 
-	* `xclip` for copy on clipboard option
+* On attacker machine: `xclip` to copy command on clipboard (not required)
+
+The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
 ### Steps
 
