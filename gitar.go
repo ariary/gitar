@@ -14,6 +14,7 @@ func main() {
 	port := flag.String("p", "9237", "Port to serve on")
 	directory := flag.String("d", ".", "Point to the directory of static file to host")
 	copyArg := flag.Bool("copy", true, "Copy gitar set up command to clipboard (xclip required)")
+	tls := flag.Bool("tls", false, "Use HTTPS server (TLS)")
 	flag.Parse()
 
 	handlers.InitHandlers(*directory, *serverIp, *port)
@@ -27,7 +28,13 @@ func main() {
 	}
 
 	//Listen
-	err := http.ListenAndServe(":"+*port, nil)
+	var err error
+	if *tls {
+		fmt.Println("toto")
+		err = http.ListenAndServeTLS(":"+*port, "server.crt", "server.key", nil)
+	} else {
+		err = http.ListenAndServe(":"+*port, nil)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
