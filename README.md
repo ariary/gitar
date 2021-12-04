@@ -1,21 +1,20 @@
 <h1 align=center> 🎸 gitar ⇆</h1>
 
-----
+<table>
+<tr>
+<td>
 <div align="center">
-<code>
+<pre>
 <b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from the <q>target machine</q>
-
 <b>~></b><b><i> No installation needed</i></b> on <q>target machine</q>
-</code>
-
 <b>~></b><b><i> Fast and simple </i></b> deployment
-</code>
-
+</pre>
 
 <img src="https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif">
 </div>
-
-
+</td>
+</tr>
+</table>
 
 ## TL;DR *- and listen music*
 
@@ -25,8 +24,6 @@ On my target machine:
  - **Upload a di1rectory** to my attacker machine: `pushr [file]`
 
 *Before be able to use these shortcut you have to [set up](#set-up) both machines. Once again, the aim is to made it as simple as possible*
-
-----
 
 ## Set up
 
@@ -69,7 +66,7 @@ An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 44
 
 **Improve UX**
 - Download directory support 
-- Handle case when curl isn't on target machine (wget version?)
+- Handle case when curl isn't on target machine (wget version?) *Proposal: flag `method` (default curl), will determine the handler "alias" and adapt it in function (wget and Invoke-Webquest)
 - Completion on target shell to help `pull` (path completion)
 - An option to directly launch the reverse shell session with shortcut from `gitar`
 - Soft to workaround limit due to `cat` use for reverse shell connection => autocompletion in reverse shell will not work as we have a pipe not a terminal. (To solve the pb we must have a prgm that creates a pseudoterminal, spawns a program connected to this pseudoterminal [see](https://stackoverflow.com/questions/5843741/how-can-i-pipe-initial-input-into-process-which-will-then-be-interactive) )
