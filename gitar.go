@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"gitar/pkg/config"
 	"gitar/pkg/handlers"
 	"gitar/pkg/utils"
 	"log"
@@ -17,10 +18,22 @@ func main() {
 	tls := flag.Bool("tls", false, "Use HTTPS server (TLS)")
 	flag.Parse()
 
-	handlers.InitHandlers(*directory, *serverIp, *port)
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, Directory: *directory, IsCopied: *copyArg, Tls: *tls}
+
+	handlers.InitHandlers(cfg)
 
 	//Set up messages
-	setUpMsg := "curl -s http://" + *serverIp + ":" + *port + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
+	ip := cfg.ServerIP
+	p := cfg.Port
+	var protocol string
+	if cfg.Tls {
+		protocol = "-k https://"
+	} else {
+		protocol = "http://"
+	}
+	url := protocol + ip + ":" + p
+
+	setUpMsg := "curl -s " + url + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
 	fmt.Println("Launch it on remote to set up gitar exchange:")
 	fmt.Println(setUpMsg)
 	if *copyArg {
@@ -29,11 +42,10 @@ func main() {
 
 	//Listen
 	var err error
-	if *tls {
-		fmt.Println("toto")
-		err = http.ListenAndServeTLS(":"+*port, "server.crt", "server.key", nil)
+	if cfg.Tls {
+		err = http.ListenAndServeTLS(":"+cfg.Port, "server.crt", "server.key", nil)
 	} else {
-		err = http.ListenAndServe(":"+*port, nil)
+		err = http.ListenAndServe(":"+cfg.Port, nil)
 	}
 	if err != nil {
 		log.Fatal(err)
