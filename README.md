@@ -8,6 +8,10 @@
 <b>~></b><b><i> No installation needed</i></b> on <q>target machine</q>
 </code>
 
+<b>~></b><b><i> Fast and simple </i></b> deployment
+</code>
+
+
 <img src="https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif">
 </div>
 
