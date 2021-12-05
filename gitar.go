@@ -13,12 +13,14 @@ import (
 func main() {
 	serverIp := flag.String("e", "127.0.0.1", "Server external reachable ip")
 	port := flag.String("p", "9237", "Port to serve on")
-	directory := flag.String("d", ".", "Point to the directory of static file to host")
+	dlDir := flag.String("d", ".", "Point to the directory of static file to serve")
+	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
 	copyArg := flag.Bool("copy", true, "Copy gitar set up command to clipboard (xclip required)")
 	tls := flag.Bool("tls", false, "Use HTTPS server (TLS)")
+
 	flag.Parse()
 
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, Directory: *directory, IsCopied: *copyArg, Tls: *tls}
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls}
 
 	handlers.InitHandlers(cfg)
 
@@ -43,7 +45,7 @@ func main() {
 	//Listen
 	var err error
 	if cfg.Tls {
-		err = http.ListenAndServeTLS(":"+cfg.Port, "server.crt", "server.key", nil)
+		err = http.ListenAndServeTLS(":"+cfg.Port, "$HOME/.gitar/certs/server.crt", "$HOME/.gitar/certs/server.key", nil)
 	} else {
 		err = http.ListenAndServe(":"+cfg.Port, nil)
 	}

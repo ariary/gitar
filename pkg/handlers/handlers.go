@@ -12,25 +12,25 @@ import (
 
 // UPLOAD //
 //Handler for uploading files
-func UploadHandler() http.HandlerFunc {
+func UploadHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
-			upload.UploadFile(w, r)
+			upload.UploadFile(cfg.UploadDir, w, r)
 		}
 	}
 }
 
 //Handler for uploading directory (tar format)
-func UploadDirectoryHandler() http.HandlerFunc {
+func UploadDirectoryHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case "GET":
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
-			upload.UntarDirectory(w, r)
+			upload.UntarDirectory(cfg.UploadDir, w, r)
 		}
 	}
 }
@@ -78,13 +78,13 @@ func TreeHandler() http.HandlerFunc {
 
 func InitHandlers(cfg *config.Config) {
 	//Upload route
-	http.HandleFunc("/push", UploadHandler())
+	http.HandleFunc("/push", UploadHandler(cfg))
 
 	//Upload directory route
-	http.HandleFunc("/pushr", UploadDirectoryHandler())
+	http.HandleFunc("/pushr", UploadDirectoryHandler(cfg))
 
 	//Download route
-	http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.Directory))))
+	http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir))))
 
 	//Alias endpoint
 	http.HandleFunc("/alias", AliasHandler(cfg))

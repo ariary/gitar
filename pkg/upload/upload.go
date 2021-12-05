@@ -15,7 +15,7 @@ import (
 
 //Upload binary file <= 32Mb and return byte content
 //Note: upload with curl -X POST -F "file=@[BINARY_FILENAME]" http://[TARGET_IP:PORT]/push
-func UploadFile(w http.ResponseWriter, r *http.Request) {
+func UploadFile(upDir string, w http.ResponseWriter, r *http.Request) {
 	// Maximum upload of 10 MB files
 	r.ParseMultipartForm(32 << 20)
 
@@ -31,7 +31,8 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	_, err = io.Copy(buf, file)
 	utils.Check(err, "")
 
-	f, err := os.Create(handler.Filename)
+	upFilename := upDir + handler.Filename
+	f, err := os.Create(upFilename)
 	utils.Check(err, "Error creating file")
 
 	defer f.Close()
@@ -41,7 +42,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 }
 
 //Untar directory from http request (dl it, untar it, remove it)
-func UntarDirectory(w http.ResponseWriter, r *http.Request) {
+func UntarDirectory(upDir string, w http.ResponseWriter, r *http.Request) {
 	// Maximum upload of 10 MB files
 	r.ParseMultipartForm(32 << 20)
 
@@ -53,18 +54,21 @@ func UntarDirectory(w http.ResponseWriter, r *http.Request) {
 
 	filename := handler.Filename[:strings.LastIndex(handler.Filename, ".")] //handler.Filename - .tar
 	fmt.Printf("Uploaded Directory: %+v\n", filename)
+	filename = upDir + filename
 
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
 	utils.Check(err, "")
 	//write file
-	f, err := os.Create(handler.Filename)
+	upFilename := upDir + handler.Filename
+	fmt.Println(upFilename)
+	f, err := os.Create(upFilename)
 	utils.Check(err, "Error creating file")
 
 	defer f.Close()
 
 	_, err = f.Write(buf.Bytes())
 	utils.Check(err, "Error writing to file")
-	utils.Untar(handler.Filename, filename)
-	utils.Check(os.Remove(handler.Filename), "Error while remove directory tar")
+	utils.Untar(upFilename, filename)
+	utils.Check(os.Remove(upFilename), "Error while remove directory tar")
 }
