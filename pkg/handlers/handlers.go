@@ -56,7 +56,7 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		pushFunc := "push(){\ncurl -X POST -F \"file=@$1\" " + url + "/push\n}\n"
 		fmt.Fprintf(w, pushFunc)
 		//pushr
-		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" " + url + "/pushr\n}\n"
+		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" " + url + "/pushr && rm $1.tar\n}\n"
 		fmt.Fprintf(w, pushrFunc)
 		//gtree
 		gtreeFunc := "gtree(){\ncurl " + url + "/gtree\n}\n"

@@ -61,7 +61,6 @@ func UntarDirectory(upDir string, w http.ResponseWriter, r *http.Request) {
 	utils.Check(err, "")
 	//write file
 	upFilename := upDir + handler.Filename
-	fmt.Println(upFilename)
 	f, err := os.Create(upFilename)
 	utils.Check(err, "Error creating file")
 
