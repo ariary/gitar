@@ -1,20 +1,10 @@
 <h1 align=center> 🎸 gitar ⇆</h1>
 
-<table>
-<tr>
-<td>
-<div align="center">
-<pre>
-<b>~></b> Have the  <b><i>simplest possible shortcuts </i></b> to upload/download file to/from the <q>target machine</q>
-<b>~></b><b><i> No installation needed</i></b> on <q>target machine</q>
-<b>~></b><b><i> Fast and simple </i></b> deployment
-</pre>
 
-<img src="https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif">
-</div>
-</td>
-</tr>
-</table>
+|![demo](https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif)|
+|:---:|
+|**~>** Have the  ***simplest possible shortcuts*** to upload/download file to/from the target machine<br>**~>** ***No installation needed*** on target machine<br>**~>** ***Fast and simple*** deployment|
+
 
 ## TL;DR *- and listen music*
 
