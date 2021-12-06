@@ -39,7 +39,7 @@ func UploadDirectoryHandler(cfg *config.Config) http.HandlerFunc {
 //Handler that output shortcut aimed for the target machines (source it)
 func AliasHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ip := cfg.ServerIP
+		addr := cfg.ServerIP
 		port := cfg.Port
 		var protocol string
 		if cfg.Tls {
@@ -47,7 +47,10 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		} else {
 			protocol = "http://"
 		}
-		url := protocol + ip + ":" + port
+		url := protocol + addr + ":" + port
+		if cfg.AliasUrl != "" {
+			url = cfg.AliasUrl
+		}
 
 		//pull
 		pullFunc := "pull(){\ncurl -s " + url + "/pull/$1 > $1\n}\n"
