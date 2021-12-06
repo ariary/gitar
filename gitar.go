@@ -8,6 +8,7 @@ import (
 	"gitar/pkg/utils"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
 	copyArg := flag.Bool("copy", true, "Copy gitar set up command to clipboard (xclip required)")
 	tls := flag.Bool("tls", false, "Use HTTPS server (TLS)")
+	certDir := flag.String("c", os.Getenv("HOME")+"/.gitar/certs", "Point to the cert directory")
 
 	flag.Parse()
 
@@ -45,7 +47,7 @@ func main() {
 	//Listen
 	var err error
 	if cfg.Tls {
-		err = http.ListenAndServeTLS(":"+cfg.Port, "$HOME/.gitar/certs/server.crt", "$HOME/.gitar/certs/server.key", nil)
+		err = http.ListenAndServeTLS(":"+cfg.Port, *certDir+"/server.crt", *certDir+"/server.key", nil)
 	} else {
 		err = http.ListenAndServe(":"+cfg.Port, nil)
 	}
