@@ -2,6 +2,7 @@
 
 FROM golang:1.16-alpine
 
+RUN apk add tree
 RUN mkdir /certs
 WORKDIR /app
 
