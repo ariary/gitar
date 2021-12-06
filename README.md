@@ -49,7 +49,7 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
  [`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files)
 
-### Safely `gitar` server
+### Secure launch of `gitar` server
 
  
 This is basicaly the same as launching `gitar` server. But as we expose our http server we become the prey. Hence we must harden a bit the server. To do this we launch `gitar` inside a container and use HTTPS.
