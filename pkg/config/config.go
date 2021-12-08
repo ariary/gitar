@@ -9,4 +9,5 @@ type Config struct {
 	IsCopied    bool
 	Tls         bool
 	AliasUrl    string
+	Completion  bool
 }

@@ -19,11 +19,12 @@ func main() {
 	copyArg := flag.Bool("copy", true, "Copy gitar set up command to clipboard (xclip required)")
 	tls := flag.Bool("tls", false, "Use HTTPS server (TLS)")
 	certDir := flag.String("c", os.Getenv("HOME")+"/.gitar/certs", "Point to the cert directory")
+	completion := flag.Bool("completion", true, "Enable completion for target machine") //False for /bin/sh (don't have complete)
 	aliasUrl := flag.String("alias-override-url", "", "Override url in /alias endpoint (useful if gitar server is behind a proxy)")
 
 	flag.Parse()
 
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, AliasUrl: *aliasUrl}
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, AliasUrl: *aliasUrl, Completion: *completion}
 
 	handlers.InitHandlers(cfg)
 
@@ -41,7 +42,8 @@ func main() {
 		url = cfg.AliasUrl
 	}
 
-	setUpMsg := "curl -s " + url + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
+	//setUpMsg := "curl -s " + url + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
+	setUpMsg := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
 	fmt.Println("Launch it on remote to set up gitar exchange:")
 	fmt.Println(setUpMsg)
 	if *copyArg {

@@ -3,7 +3,9 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 
 	"gitar/pkg/config"
 	"gitar/pkg/upload"
@@ -80,7 +82,47 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		//gtree
 		gtreeFunc := "gtree(){\ncurl " + url + "/gtree\n}\n"
 		fmt.Fprintf(w, gtreeFunc)
+
+		//Completion
+		if cfg.Completion {
+			fmt.Fprintf(w, getCompletion(cfg.DownloadDir))
+		}
 	}
+}
+
+//Return the completion command to source
+func getCompletion(dir string) (completions string) {
+	//retrieve all file & directory of dir
+	var files string
+	var directories string
+	err := filepath.Walk(dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() {
+				files = files + " " + path
+			} else {
+				directories = directories + " " + path
+			}
+			return nil
+		})
+	utils.Check(err, "Failed retrieving files for completion")
+
+	//create completion lines
+
+	// pushC := "complete -A push"
+	// pushrC := "complete -A pushr"
+	pullC := "complete -W \"" + files + "\" pull"
+	pullrC := "complete -W \"" + directories + "\" pullr"
+	completionLines := []string{pullC, pullrC}
+
+	for i := 0; i < len(completionLines); i++ {
+		fmt.Println(completionLines[i])
+		completions += completionLines[i] + "\n"
+	}
+
+	return completions
 }
 
 // TREE //
