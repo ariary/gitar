@@ -55,12 +55,28 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		//pull
 		pullFunc := "pull(){\ncurl -s " + url + "/pull/$1 > $1\n}\n"
 		fmt.Fprintf(w, pullFunc)
+
+		//pullr
+		statusFunc := "status(){\ncurl -s -o /dev/null -w \"%s{http_code}\" " + url + "/pull/$1\n}\n"
+		fmt.Fprintf(w, statusFunc, "%")
+
+		getAllFillesFunc := "getFiles(){\ncurl -L -s http://127.0.0.1:9237/pull/$1 | grep \"<a\" | cut -d \"\\\"\" -f 2\n}\n"
+		fmt.Fprintf(w, getAllFillesFunc)
+
+		isDirFunc := "isDir(){\n[[ \"$1\" == */ ]]\n}\n"
+		fmt.Fprintf(w, isDirFunc)
+
+		pullrFunc := "pullr(){\nSTATUS=$(status $1)\nif [ $STATUS -eq 301  ]\nmkdir $1\nthen\nFILES=$(getFiles \"$1\")\nfor value in $FILES\ndo\nif isDir $value\nthen\nvalue=${value::-1}\nfi\nfile=\"$1/$value\"\nSTATUS=$(status $file)\nif [ $STATUS -eq 301  ]\nthen\npullr $file\nelse\npull $file\nfi\ndone\nfi\n}\n"
+		fmt.Fprintf(w, pullrFunc)
+
 		//push
 		pushFunc := "push(){\ncurl -X POST -F \"file=@$1\" " + url + "/push\n}\n"
 		fmt.Fprintf(w, pushFunc)
+
 		//pushr
 		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" " + url + "/pushr && rm $1.tar\n}\n"
 		fmt.Fprintf(w, pushrFunc)
+
 		//gtree
 		gtreeFunc := "gtree(){\ncurl " + url + "/gtree\n}\n"
 		fmt.Fprintf(w, gtreeFunc)
