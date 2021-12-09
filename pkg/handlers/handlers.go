@@ -118,7 +118,6 @@ func getCompletion(dir string) (completions string) {
 	completionLines := []string{pullC, pullrC}
 
 	for i := 0; i < len(completionLines); i++ {
-		fmt.Println(completionLines[i])
 		completions += completionLines[i] + "\n"
 	}
 
