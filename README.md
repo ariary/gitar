@@ -9,7 +9,7 @@
 
 On my target machine:
  - **Download a file** to my attacker machine: `pull [file]`
- - **Download a directory** to my attacker machine: `pullr [directory]
+ - **Download a directory** to my attacker machine: `pullr [directory]`
  - **Upload a file** to my attacker machine: `push [file]`
  - **Upload a directory** to my attacker machine: `pushr [directory]`
 
