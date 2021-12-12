@@ -9,8 +9,9 @@
 
 On my target machine:
  - **Download a file** to my attacker machine: `pull [file]`
+ - **Download a directory** to my attacker machine: `pullr [directory]
  - **Upload a file** to my attacker machine: `push [file]`
- - **Upload a di1rectory** to my attacker machine: `pushr [file]`
+ - **Upload a directory** to my attacker machine: `pushr [directory]`
 
 *Before be able to use these shortcut you have to [set up](#set-up) both machines. Once again, the aim is to made it as simple as possible*
 
