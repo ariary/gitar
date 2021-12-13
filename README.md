@@ -81,5 +81,8 @@ An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 44
 - An option to directly launch the reverse shell session with shortcut from `gitar`
 - Soft to workaround limit due to `cat` use for reverse shell connection => autocompletion in reverse shell will not work as we have a pipe not a terminal. (To solve the pb we must have a prgm that creates a pseudoterminal, spawns a program connected to this pseudoterminal [see](https://stackoverflow.com/questions/5843741/how-can-i-pipe-initial-input-into-process-which-will-then-be-interactive) )
 
+<!--- 🎸 Make file exchange more Rock'N'Roll during pentest/ctf  ➳ No requirement & Simple shortcuts--->
 
 <div align=center><img src="https://github.com/ariary/gitar/blob/main/img/gitar-small.png"><div>
+	
+	
