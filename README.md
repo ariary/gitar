@@ -1,4 +1,3 @@
-# Gitar
 <div align=center>
 <img src=https://github.com/ariary/gitar/blob/main/img/gitar-logo.png width=150>
 	
