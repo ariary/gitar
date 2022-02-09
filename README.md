@@ -1,8 +1,15 @@
-<h1 align=center> 🎸 gitar ⇆</h1>
+# Gitar
+<div align=center>
+<img src=https://github.com/ariary/gitar/blob/main/img/gitar-logo.png width=150>
+	
+<strong>📡 A more sophisticated python HTTP server sibling <br>🎸 with even simpler interactions for file exchange (Pentest/CTF) </strong>
+<br>
+</div>
 
 |![demo](https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif)|
 |:---:|
 |**~>** Have the  ***simplest possible shortcuts*** to upload/download file to/from the target machine<br>**~>** ***No installation needed*** on target machine<br>**~>** ***Fast and simple*** deployment|
+
 
 
 ## TL;DR *- and listen music*
