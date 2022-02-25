@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"gitar/pkg/config"
 	"gitar/pkg/handlers"
-	"gitar/pkg/utils"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/ariary/go-utils/pkg/check"
+	"github.com/ariary/go-utils/pkg/clipboard"
 )
 
 func main() {
@@ -47,7 +49,7 @@ func main() {
 	fmt.Println("Launch it on remote to set up gitar exchange:")
 	fmt.Println(setUpMsg)
 	if *copyArg {
-		utils.Check(utils.Copy(setUpMsg), "")
+		check.Check(clipboard.Copy(setUpMsg), "")
 	}
 
 	//Listen

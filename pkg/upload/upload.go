@@ -9,6 +9,9 @@ import (
 	"strings"
 
 	"gitar/pkg/utils"
+
+	"github.com/ariary/go-utils/pkg/check"
+	"github.com/ariary/go-utils/pkg/color"
 )
 
 // UPLOAD //
@@ -21,24 +24,24 @@ func UploadFile(upDir string, w http.ResponseWriter, r *http.Request) {
 
 	// Get handler for filename, size and headers
 	file, handler, err := r.FormFile("file")
-	utils.Check(err, "Error Retrieving the File")
+	check.Check(err, "Error Retrieving the File")
 
 	defer file.Close()
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
+	fmt.Printf("Upload File: %+v\n", color.Bold(handler.Filename))
 
 	//write file
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
-	utils.Check(err, "")
+	check.Check(err, "")
 
 	upFilename := upDir + handler.Filename
 	f, err := os.Create(upFilename)
-	utils.Check(err, "Error creating file")
+	check.Check(err, "Error creating file")
 
 	defer f.Close()
 
 	_, err = f.Write(buf.Bytes())
-	utils.Check(err, "Error writing to file")
+	check.Check(err, "Error writing to file")
 }
 
 //Untar directory from http request (dl it, untar it, remove it)
@@ -48,26 +51,26 @@ func UntarDirectory(upDir string, w http.ResponseWriter, r *http.Request) {
 
 	// Get handler for filename, size and headers
 	file, handler, err := r.FormFile("file")
-	utils.Check(err, "Error Retrieving the File")
+	check.Check(err, "Error Retrieving the File")
 
 	defer file.Close()
 
 	filename := handler.Filename[:strings.LastIndex(handler.Filename, ".")] //handler.Filename - .tar
-	fmt.Printf("Uploaded Directory: %+v\n", filename)
+	fmt.Printf("Upload Directory: %+v\n", color.Bold(filename))
 	filename = upDir + filename
 
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
-	utils.Check(err, "")
+	check.Check(err, "")
 	//write file
 	upFilename := upDir + handler.Filename
 	f, err := os.Create(upFilename)
-	utils.Check(err, "Error creating file")
+	check.Check(err, "Error creating file")
 
 	defer f.Close()
 
 	_, err = f.Write(buf.Bytes())
-	utils.Check(err, "Error writing to file")
+	check.Check(err, "Error writing to file")
 	utils.Untar(upFilename, filename)
-	utils.Check(os.Remove(upFilename), "Error while remove directory tar")
+	check.Check(os.Remove(upFilename), "Error while remove directory tar")
 }

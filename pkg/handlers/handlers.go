@@ -6,18 +6,24 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"gitar/pkg/config"
 	"gitar/pkg/upload"
-	"gitar/pkg/utils"
+
+	"github.com/ariary/go-utils/pkg/check"
+	"github.com/ariary/go-utils/pkg/color"
 )
 
 // UPLOAD //
 //Handler for uploading files
 func UploadHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		remote := "(" + r.RemoteAddr + ")"
+		fmt.Print(color.Teal(remote), " ")
 		switch r.Method {
 		case "GET":
+			fmt.Println("Get request")
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
 			upload.UploadFile(cfg.UploadDir, w, r)
@@ -28,13 +34,26 @@ func UploadHandler(cfg *config.Config) http.HandlerFunc {
 //Handler for uploading directory (tar format)
 func UploadDirectoryHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		remote := "(" + r.RemoteAddr + ")"
+		fmt.Print(color.Teal(remote), " ")
 		switch r.Method {
 		case "GET":
+			fmt.Println("Get request")
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
 			upload.UntarDirectory(cfg.UploadDir, w, r)
 		}
 	}
+}
+
+//Handler for uploading directory (tar format)
+func DownloadHandler(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		remote := "(" + r.RemoteAddr + ")"
+		file := strings.Join(strings.Split(r.URL.Path, "/")[2:], "/")
+		fmt.Println(color.Green(remote), "Download file:", color.Bold(file))
+		h.ServeHTTP(w, r)
+	})
 }
 
 // ALIAS //
@@ -55,7 +74,7 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		}
 
 		//pull
-		pullFunc := "pull(){\ncurl -s " + url + "/pull/$1 > $1\n}\n"
+		pullFunc := "pull(){\nFILE=$(echo $1| rev | cut -d\"/\" -f 1 | rev)\ncurl -s " + url + "/pull/$1 > $FILE\n}\n"
 		fmt.Fprintf(w, pullFunc)
 
 		//pullr
@@ -107,7 +126,7 @@ func getCompletion(dir string) (completions string) {
 			}
 			return nil
 		})
-	utils.Check(err, "Failed retrieving files for completion")
+	check.Check(err, "Failed retrieving files for completion")
 
 	//create completion lines
 
@@ -129,7 +148,7 @@ func getCompletion(dir string) (completions string) {
 func TreeHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		out, err := exec.Command("tree").Output()
-		utils.Check(err, "Error while executing tree command")
+		check.Check(err, "Error while executing tree command")
 		fmt.Fprintf(w, string(out))
 	}
 }
@@ -144,7 +163,8 @@ func InitHandlers(cfg *config.Config) {
 	http.HandleFunc("/pushr", UploadDirectoryHandler(cfg))
 
 	//Download route
-	http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir))))
+	//http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir))))
+	http.Handle("/pull/", DownloadHandler(http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir)))))
 
 	//Alias endpoint
 	http.HandleFunc("/alias", AliasHandler(cfg))
