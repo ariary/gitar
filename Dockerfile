@@ -15,6 +15,7 @@ WORKDIR /app
 # RUN chmod 444 /certs
 
 COPY go.mod ./
+COPY go.sum ./
 RUN go mod download
 
 COPY *.go ./
