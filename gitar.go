@@ -23,12 +23,11 @@ func main() {
 	certDir := flag.String("c", os.Getenv("HOME")+"/.gitar/certs", "Point to the cert directory")
 	completion := flag.Bool("completion", true, "Enable completion for target machine") //False for /bin/sh (don't have complete)
 	aliasUrl := flag.String("alias-override-url", "", "Override url in /alias endpoint (useful if gitar server is behind a proxy)")
+	noRun := flag.Bool("dry-run", false, "Do not launch gitar server, only return command to load shortcuts")
 
 	flag.Parse()
 
 	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, AliasUrl: *aliasUrl, Completion: *completion}
-
-	handlers.InitHandlers(cfg)
 
 	//Set up messages
 	ip := cfg.ServerIP
@@ -46,11 +45,20 @@ func main() {
 
 	//setUpMsg := "curl -s " + url + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
 	setUpMsg := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
-	fmt.Println("Launch it on remote to set up gitar exchange:")
+	if !*noRun {
+		fmt.Println("Launch it on remote to set up gitar exchange:")
+	}
 	fmt.Println(setUpMsg)
 	if *copyArg {
 		check.Check(clipboard.Copy(setUpMsg), "")
 	}
+
+	if *noRun {
+		os.Exit(0)
+	}
+
+	//handlers
+	handlers.InitHandlers(cfg)
 
 	//Listen
 	var err error
