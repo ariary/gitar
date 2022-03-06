@@ -8,8 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"gitar/pkg/utils"
-
+	"github.com/ariary/gitar/pkg/utils"
 	"github.com/ariary/go-utils/pkg/check"
 	"github.com/ariary/go-utils/pkg/color"
 )

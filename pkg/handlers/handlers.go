@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"gitar/pkg/config"
-	"gitar/pkg/upload"
+	"github.com/ariary/gitar/pkg/config"
+	"github.com/ariary/gitar/pkg/upload"
 
 	"github.com/ariary/go-utils/pkg/check"
 	"github.com/ariary/go-utils/pkg/color"

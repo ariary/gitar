@@ -3,11 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"gitar/pkg/config"
-	"gitar/pkg/handlers"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/ariary/gitar/pkg/config"
+	"github.com/ariary/gitar/pkg/handlers"
 
 	"github.com/ariary/go-utils/pkg/check"
 	"github.com/ariary/go-utils/pkg/clipboard"

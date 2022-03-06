@@ -1,4 +1,4 @@
-module gitar
+module github.com/ariary/gitar
 
 go 1.16
 
