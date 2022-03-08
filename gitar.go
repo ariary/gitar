@@ -1,21 +1,27 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/gitar/pkg/handlers"
 
-	"github.com/ariary/go-utils/pkg/check"
 	"github.com/ariary/go-utils/pkg/clipboard"
 )
 
 func main() {
-	serverIp := flag.String("e", "127.0.0.1", "Server external reachable ip")
+	var detectExternal bool
+
+	serverIp := flag.String("e", "", "Server external reachable ip")
+	flag.BoolVar(&detectExternal, "ext", false, "detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
 	port := flag.String("p", "9237", "Port to serve on")
 	dlDir := flag.String("d", ".", "Point to the directory of static file to serve")
 	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
@@ -28,34 +34,65 @@ func main() {
 
 	flag.Parse()
 
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, AliasUrl: *aliasUrl, Completion: *completion}
+	// external IP checks
+	if *serverIp == "" { //no ip provided
+		var err error
+		if detectExternal { //use external IP
+			*serverIp, err = getExternalIP()
+			if err != nil {
+				fmt.Println("Failed to detect external ip (dig):", err)
+				os.Exit(1)
+			}
+		} else { //use hostname ip
+			*serverIp, err = getHostIP()
+			if err != nil {
+				fmt.Println("Failed to detect host ip (hostname):", err)
+				os.Exit(1)
+			}
+		}
 
-	//Set up messages
-	ip := cfg.ServerIP
-	p := cfg.Port
+	} else if detectExternal {
+		var err error
+		*serverIp, err = getExternalIP()
+		if err != nil {
+			fmt.Println("Failed to detect external ip (dig):", err)
+			os.Exit(1)
+		}
+
+	}
+
+	//Url construction
+	ip := *serverIp
+	p := *port
 	var protocol string
-	if cfg.Tls {
+	if *tls {
 		protocol = "-k https://"
 	} else {
 		protocol = "http://"
 	}
-	url := protocol + ip + ":" + p
-	if cfg.AliasUrl != "" {
-		url = cfg.AliasUrl
+
+	var url string
+	if *aliasUrl != "" {
+		url = *aliasUrl
+	} else {
+		url = protocol + ip + ":" + p
 	}
 
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion}
+
+	//Set up messages
 	//setUpMsg := "curl -s " + url + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
 	setUpMsg := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
 	if !*noRun {
 		fmt.Println("Launch it on remote to set up gitar exchange:")
 	}
 	fmt.Println(setUpMsg)
-	if *copyArg {
-		check.Check(clipboard.Copy(setUpMsg), "")
-	}
-
 	if *noRun {
 		os.Exit(0)
+	}
+
+	if *copyArg {
+		clipboard.Copy(setUpMsg)
 	}
 
 	//handlers
@@ -71,4 +108,31 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getExternalIP() (ip string, err error) {
+	cmd := exec.Command("dig", "@resolver4.opendns.com", "myip.opendns.com", "+short")
+	ipB, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	ip = string(ipB)
+	ip = strings.ReplaceAll(ip, "\n", "")
+	return ip, err
+}
+
+func getHostIP() (ip string, err error) {
+	cmd := exec.Command("hostname", "-I")
+	ipB, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+
+	//Only take first result
+	r := bytes.NewReader(ipB)
+	reader := bufio.NewReader(r)
+	line, _, err := reader.ReadLine()
+	ip = string(line)
+	ip = strings.ReplaceAll(ip, " ", "")
+	return ip, err
 }

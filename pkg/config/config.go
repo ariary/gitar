@@ -8,6 +8,6 @@ type Config struct {
 	UploadDir   string
 	IsCopied    bool
 	Tls         bool
-	AliasUrl    string
+	Url         string
 	Completion  bool
 }

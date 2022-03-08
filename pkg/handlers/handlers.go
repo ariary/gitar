@@ -60,18 +60,8 @@ func DownloadHandler(h http.Handler) http.Handler {
 //Handler that output shortcut aimed for the target machines (source it)
 func AliasHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		addr := cfg.ServerIP
-		port := cfg.Port
-		var protocol string
-		if cfg.Tls {
-			protocol = "-k https://"
-		} else {
-			protocol = "http://"
-		}
-		url := protocol + addr + ":" + port
-		if cfg.AliasUrl != "" {
-			url = cfg.AliasUrl
-		}
+
+		url := cfg.Url
 
 		//pull
 		pullFunc := "pull(){\nFILE=$(echo $1| rev | cut -d\"/\" -f 1 | rev)\ncurl -s " + url + "/pull/$1 > $FILE\n}\n"
