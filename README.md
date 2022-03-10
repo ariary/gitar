@@ -107,17 +107,6 @@ An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 44
 ```shell
 go install github.com/ariary/gitar@latest
 ```
-## Enhancement 🛣️
-
-**~>** *All improvements must keep `gitar` simple and don't add unlikely pre-requisites (especially for the target machine)*
-
-**Useful cause we will expose our http server and thus we become the prey**
-- Hardening container image (use a non-root user, but in same time we have to be able to read/write from host volumes)
-- HTTPS, basic authent (for the file server part)
-
-**Improve UX**
-- Handle case when curl isn't on target machine (wget version?) *Proposal: flag `method` (default curl), will determine the handler "alias" and adapt it in function (wget and Invoke-Webquest)
-- Soft to workaround limit due to `cat` use for reverse shell connection => autocompletion in reverse shell will not work as we have a pipe not a terminal. (To solve the pb we must have a prgm that creates a pseudoterminal, spawns a program connected to this pseudoterminal [see](https://stackoverflow.com/questions/5843741/how-can-i-pipe-initial-input-into-process-which-will-then-be-interactive) )
 
 	
 	
