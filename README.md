@@ -67,7 +67,7 @@ The following steps expose files of current directory. Files uploaded by remote 
 
 On **Attacker machine**: 
 ```shell
-docker run -it --rm --cap-drop=all -v "${PWD}:/gitar/exchange" ariary/gitar
+docker run -it --rm --cap-drop=all --cap-add=dac_override -v "${PWD}:/gitar/exchange" ariary/gitar
 ```
 
 
