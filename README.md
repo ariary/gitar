@@ -77,7 +77,8 @@ Get shortcuts and source them. The one-liner corresponding is in the container s
 
 **You can now `push`or `pull` file being more safe [🎶](#tldr---and-listen-music)**
 
-*⚠️: to enable host volume in container we must (?) use root user within *
+*⚠️: to enable host volume in container we must (?) use root user within*
+
 <sup>[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files-safely)</sup>
 
 
