@@ -43,7 +43,7 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
 Launch `gitar` server: 
 ```shell
-gitar -e [server_reachable_ip]
+gitar
 ```
 
 #### (Target machine)
