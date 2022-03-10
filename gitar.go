@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -125,14 +123,21 @@ func getHostIP() (ip string, err error) {
 	cmd := exec.Command("hostname", "-I")
 	ipB, err := cmd.Output()
 	if err != nil {
-		return "", err
+		//retry with -i
+		cmd := exec.Command("hostname", "-i")
+		ipB, err := cmd.Output()
+		if err != nil {
+			return "", err
+		}
+		ip = strings.ReplaceAll(string(ipB), "\n", "")
+		return ip, nil
 	}
-
 	//Only take first result
-	r := bytes.NewReader(ipB)
-	reader := bufio.NewReader(r)
-	line, _, err := reader.ReadLine()
-	ip = string(line)
-	ip = strings.ReplaceAll(ip, " ", "")
+	//r := bytes.NewReader(ipB)
+	//reader := bufio.NewReader(r)
+	//line, _, err := reader.ReadLine()
+	//ip = string(line)
+	//ip = strings.ReplaceAll(ip, " ", "")
+	ip = strings.Fields(string(ipB))[0]
 	return ip, err
 }

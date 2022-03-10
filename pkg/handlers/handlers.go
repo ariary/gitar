@@ -109,6 +109,11 @@ func getCompletion(dir string) (completions string) {
 			if err != nil {
 				return err
 			}
+			//withdraw dir prefix to be consistent with handler endpoint
+			if dir != "."{
+				path = strings.Replace(path,dir+"/","",1)
+			}
+
 			if !info.IsDir() {
 				files = files + " " + path
 			} else {

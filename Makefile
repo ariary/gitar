@@ -1,7 +1,7 @@
 build.gitar:
 	@echo "build in ${PWD}";go build gitar.go
 
-build.image-gitar:
+build.gitar.image:
 	docker build . -t gitar
 
 install.gitar:

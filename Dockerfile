@@ -1,10 +1,12 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.16-alpine
+FROM golang:1.17-alpine
 
-RUN apk add tree
-RUN mkdir /certs
-WORKDIR /app
+RUN apk add tree bind-tools
+RUN apk add openssl && rm -rf /var/cache/apk/*
+RUN mkdir /gitar
+WORKDIR /gitar
+RUN mkdir ./certs && mkdir ./exchange
 
 # Write  access for non-root docker user
 # RUN addgroup --gid 1024 nonroot
@@ -15,12 +17,20 @@ WORKDIR /app
 # RUN chmod 444 /certs
 
 COPY go.mod ./
+COPY *.go ./
+COPY pkg ./pkg
+COPY ./entrypoint.sh /gitar/
 RUN go mod tidy
 RUN go mod download
 
-COPY *.go ./
-COPY pkg ./pkg
-RUN go build -o /gitar gitar.go
 
-#USER nonroot:nonroot
-ENTRYPOINT [ "/gitar" ]
+# RUN addgroup --system nonroot
+# RUN adduser --system nonroot --ingroup nonroot
+# RUN chown -R nonroot:nonroot /gitar
+# USER nonroot:nonroot
+
+
+RUN go build gitar.go
+
+
+ENTRYPOINT [ "/gitar/entrypoint.sh" ]
