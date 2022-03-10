@@ -76,8 +76,8 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 
 		isDirFunc := "isDir(){\n[[ \"$1\" == */ ]]\n}\n"
 		fmt.Fprintf(w, isDirFunc)
-		
-		pullrFunc:=`pullr(){
+
+		pullrFunc := `pullr(){
 			STATUS=$(status $1)
 			if [ $STATUS -eq 301  ]
 				mkdir -p $1
@@ -138,8 +138,8 @@ func getCompletion(dir string) (completions string) {
 				return err
 			}
 			//withdraw dir prefix to be consistent with handler endpoint
-			if dir != "."{
-				path = strings.Replace(path,dir+"/","",1)
+			if dir != "." {
+				path = strings.Replace(path, dir+"/", "", 1)
 			}
 
 			if !info.IsDir() {
@@ -168,9 +168,9 @@ func getCompletion(dir string) (completions string) {
 
 // TREE //
 //Handler that print the tree of the file server
-func TreeHandler() http.HandlerFunc {
+func TreeHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		out, err := exec.Command("tree").Output()
+		out, err := exec.Command("tree", cfg.DownloadDir).Output()
 		check.Check(err, "Error while executing tree command")
 		fmt.Fprintf(w, string(out))
 	}
@@ -193,5 +193,5 @@ func InitHandlers(cfg *config.Config) {
 	http.HandleFunc("/alias", AliasHandler(cfg))
 
 	//Tree endpoint
-	http.HandleFunc("/gtree", TreeHandler())
+	http.HandleFunc("/gtree", TreeHandler(cfg))
 }
