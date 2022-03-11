@@ -67,17 +67,12 @@ The following steps expose files of current directory. Files uploaded by remote 
 
 On **Attacker machine**: 
 ```shell
-docker run -it --rm --cap-drop=all --cap-add=dac_override -v "${PWD}:/gitar/exchange" ariary/gitar
+docker run -it --rm --cap-drop=all --cap-add=dac_override --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" ariary/gitar
 ```
-
-
-On **Target machine**:
-
-Get shortcuts and source them. The one-liner corresponding is in the container stdout.
 
 **You can now `push`or `pull` file being more safe [🎶](#tldr---and-listen-music)**
 
-*⚠️: to enable host volume in container we must (?) use root user within*
+
 
 <sup>[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files-safely)</sup>
 

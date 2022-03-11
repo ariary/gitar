@@ -32,5 +32,7 @@ RUN go mod download
 
 RUN go build gitar.go
 
+RUN chmod 777 /gitar -R
+
 
 ENTRYPOINT [ "/gitar/entrypoint.sh" ]

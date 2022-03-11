@@ -71,7 +71,7 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		statusFunc := "status(){\ncurl -s -o /dev/null -w \"%s{http_code}\" " + url + "/pull/$1\n}\n"
 		fmt.Fprintf(w, statusFunc, "%")
 
-		getAllFillesFunc := "getFiles(){\ncurl -L -s http://127.0.0.1:9237/pull/$1 | grep \"<a\" | cut -d \"\\\"\" -f 2\n}\n"
+		getAllFillesFunc := "getFiles(){\ncurl -L -s " + url + "/pull/$1 | grep \"<a\" | cut -d \"\\\"\" -f 2\n}\n"
 		fmt.Fprintf(w, getAllFillesFunc)
 
 		isDirFunc := "isDir(){\n[[ \"$1\" == */ ]]\n}\n"
@@ -83,6 +83,11 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 				mkdir -p $1
 			then
 				FILES=$(getFiles "$1")
+			fi
+			#fix zsh bug
+			local IFS=$'\n'
+			if [ $ZSH_VERSION ]; then
+			  setopt sh_word_split
 			fi
 			
 			for value in $FILES
