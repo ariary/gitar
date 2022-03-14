@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -16,10 +18,11 @@ import (
 )
 
 func main() {
-	var detectExternal bool
+	var detectExternal, windows bool
 
 	serverIp := flag.String("e", "", "Server external reachable ip")
-	flag.BoolVar(&detectExternal, "ext", false, "detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
+	flag.BoolVar(&detectExternal, "ext", false, "Detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
+	flag.BoolVar(&windows, "windows", false, "Target machine is a windows (copy paste windows shortcuts)")
 	port := flag.String("p", "9237", "Port to serve on")
 	dlDir := flag.String("d", ".", "Point to the directory of static file to serve")
 	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
@@ -79,10 +82,16 @@ func main() {
 	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion}
 
 	//Set up messages
-	//setUpMsg := "curl -s " + url + "/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias"
-	setUpMsg := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
+	//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
+	setUpMsgLinux := "source <(curl -s " + url + "/alias)"
+	setUpMsgWindows := "curl -s " + url + "/aliaswin > ./alias && doskey /macrofile=alias && del alias"
+	setUpMsg := setUpMsgLinux
+	if windows {
+		setUpMsg = setUpMsgWindows
+	}
+
 	if !*noRun {
-		fmt.Println("Launch it on remote to set up gitar exchange:")
+		fmt.Println("Set up gitar exchange on remote:")
 	}
 	fmt.Println(setUpMsg)
 	if *noRun {
@@ -129,15 +138,15 @@ func getHostIP() (ip string, err error) {
 		if err != nil {
 			return "", err
 		}
-		ip = strings.ReplaceAll(string(ipB), "\n", "")
+		ip = string(ipB)
 		return ip, nil
 	}
+
 	//Only take first result
-	//r := bytes.NewReader(ipB)
-	//reader := bufio.NewReader(r)
-	//line, _, err := reader.ReadLine()
-	//ip = string(line)
-	//ip = strings.ReplaceAll(ip, " ", "")
-	ip = strings.Fields(string(ipB))[0]
+	r := bytes.NewReader(ipB)
+	reader := bufio.NewReader(r)
+	line, _, err := reader.ReadLine()
+	ip = string(line)
+	ip = strings.ReplaceAll(ip, " ", "")
 	return ip, err
 }
