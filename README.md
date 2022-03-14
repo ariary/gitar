@@ -6,7 +6,7 @@
 <br>
 </div>
 
-|![demo](https://github.com/ariary/gitar/blob/main/img/gitar-demo.gif)|
+|![demo](https://github.com/ariary/gitar/blob/main/img/gitar-screen.png)|
 |:---:|
 |**~>** Have the  ***simplest possible shortcuts*** to upload/download file to/from the target machine<br>**~>** ***No installation needed*** on target machine<br>**~>** ***Fast and simple*** deployment|
 
