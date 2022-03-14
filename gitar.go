@@ -19,6 +19,25 @@ import (
 	"github.com/ariary/go-utils/pkg/clipboard"
 )
 
+var usage = `Usage of gitar: gitar [flags]
+Launch an HTTP server to ease file sharing
+  -e                       external reachable ip to server the HTTP server
+  -p                       specify HTTP server port
+  --ext                    detect the external IP to use
+  -d                       point to the directory of static file to serve
+  -u                       point to the directory where file are uploaded
+  --copy                   copy gitar set up command to clipboard (xclip required). True by default, disable with --copy=false
+  --tls                    use TLS (HTTPS server)
+  -c                       point to the cert directory (use with --tls)
+  --completion             enable completion for target machine (enabled by default). Works if target shell is bash, zsh
+  --alias-override-url     override url in /alias endpoint (useful if gitar server is behind a proxy)
+  --secret                 provide the secret that will prefix URL paths. (by default: auto-generated)
+  --dry-run                do not launch gitar server, only return command to load shortcuts
+  --windows		           specify that the target machine is a windows
+
+  -h, --help                  prints help information 
+`
+
 func main() {
 	var detectExternal, windows bool
 
@@ -36,6 +55,7 @@ func main() {
 	secret := flag.String("secret", "", "Provide a secret that will prefix URL paths. (by default: auto-generated)")
 	noRun := flag.Bool("dry-run", false, "Do not launch gitar server, only return command to load shortcuts")
 
+	flag.Usage = func() { fmt.Print(usage) }
 	flag.Parse()
 
 	// external IP checks
