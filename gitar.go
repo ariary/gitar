@@ -6,10 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/gitar/pkg/handlers"
@@ -31,6 +33,7 @@ func main() {
 	certDir := flag.String("c", os.Getenv("HOME")+"/.gitar/certs", "Point to the cert directory")
 	completion := flag.Bool("completion", true, "Enable completion for target machine") //False for /bin/sh (don't have complete)
 	aliasUrl := flag.String("alias-override-url", "", "Override url in /alias endpoint (useful if gitar server is behind a proxy)")
+	secret := flag.String("secret", "", "Provide a secret that will prefix URL paths. (by default: auto-generated)")
 	noRun := flag.Bool("dry-run", false, "Do not launch gitar server, only return command to load shortcuts")
 
 	flag.Parse()
@@ -62,6 +65,19 @@ func main() {
 
 	}
 
+	//Sercet generation
+	if *secret == "" {
+		//generate random string
+		//*secret = encryption.GenerateRandom()
+		rand.Seed(time.Now().UnixNano())
+		var characters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789-_=")
+		b := make([]rune, 7)
+		for i := range b {
+			b[i] = characters[rand.Intn(len(characters))]
+		}
+		*secret = string(b)
+	}
+
 	//Url construction
 	ip := *serverIp
 	p := *port
@@ -74,12 +90,12 @@ func main() {
 
 	var url string
 	if *aliasUrl != "" {
-		url = *aliasUrl
+		url = *aliasUrl + "/" + *secret
 	} else {
-		url = protocol + ip + ":" + p
+		url = protocol + ip + ":" + p + "/" + *secret
 	}
 
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion}
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion, Secret: *secret}
 
 	//Set up messages
 	//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
@@ -89,7 +105,7 @@ func main() {
 	if windows {
 		setUpMsg = setUpMsgWindows
 	}
-
+	fmt.Println(cfg.Secret)
 	if !*noRun {
 		fmt.Println("Set up gitar exchange on remote:")
 	}

@@ -10,4 +10,5 @@ type Config struct {
 	Tls         bool
 	Url         string
 	Completion  bool
+	Secret      string
 }

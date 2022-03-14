@@ -50,7 +50,7 @@ func UploadDirectoryHandler(cfg *config.Config) http.HandlerFunc {
 func DownloadHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		remote := "(" + r.RemoteAddr + ")"
-		file := strings.Join(strings.Split(r.URL.Path, "/")[2:], "/")
+		file := strings.Join(strings.Split(r.URL.Path, "/")[3:], "/")
 		fmt.Println(color.Green(remote), "Download file:", color.Bold(file))
 		h.ServeHTTP(w, r)
 	})
@@ -260,19 +260,19 @@ func TreeHandler(cfg *config.Config) http.HandlerFunc {
 
 func InitHandlers(cfg *config.Config) {
 	//Upload route
-	http.HandleFunc("/push", UploadHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/push", UploadHandler(cfg))
 
 	//Upload directory route
-	http.HandleFunc("/pushr", UploadDirectoryHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/pushr", UploadDirectoryHandler(cfg))
 
 	//Download route
 	//http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir))))
-	http.Handle("/pull/", DownloadHandler(http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir)))))
+	http.Handle("/"+cfg.Secret+"/pull/", DownloadHandler(http.StripPrefix("/"+cfg.Secret+"/pull/", http.FileServer(http.Dir(cfg.DownloadDir)))))
 
 	//Alias endpoint
-	http.HandleFunc("/alias", AliasHandler(cfg))
-	http.HandleFunc("/aliaswin", AliasWindowsHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/alias", AliasHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/aliaswin", AliasWindowsHandler(cfg))
 
 	//Tree endpoint
-	http.HandleFunc("/gtree", TreeHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/gtree", TreeHandler(cfg))
 }
