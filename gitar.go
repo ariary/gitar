@@ -33,7 +33,7 @@ Launch an HTTP server to ease file sharing
   --alias-override-url     override url in /alias endpoint (useful if gitar server is behind a proxy)
   --secret                 provide the secret that will prefix URL paths. (by default: auto-generated)
   --dry-run                do not launch gitar server, only return command to load shortcuts
-  --windows		           specify that the target machine is a windows
+  --windows                specify that the target machine is a windows
 
   -h, --help                  prints help information 
 `
