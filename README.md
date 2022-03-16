@@ -96,7 +96,9 @@ On another attacker terminal window you can now push file to remote:
 ```shell
 gtrbidi #to load gitar shortcut
 push [FILENAME]
-gtrclean #when you exchange is done
+
+#[...] when your exchange is done
+gtrclean 
 ```
 
 #### Limits
