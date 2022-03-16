@@ -24,19 +24,6 @@ On my target machine:
 
 ## Set up
 
-***~>*** To make **set up even simpler** shortcut/aliases are a great benefit. See [them 💥](https://github.com/ariary/bang/blob/main/README.md#gitar-pentest-easy-file-sharing)
-
-### Pre-requisites
-
-* HTTP Network connectivity between attacker & target machines
-* On target machine: `curl` 
-	* `tar` for directory upload 
-* On attacker machine: 
-	* `xclip` to copy command on clipboard (not required)
-	* `tree`: to expose it trough server (not required)
-	* `dig`: to automatically find extarnal IP (not required)
-
-The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
 ### 🎸 Launch `gitar` server 
  
@@ -77,6 +64,17 @@ docker run -it --rm --cap-drop=all --cap-add=dac_override --user $(id -u):$(id -
 
 <sup>[`with 💥`](https://github.com/ariary/bang/blob/main/EXAMPLES.md#share-files-safely)</sup>
 
+### Pre-requisites
+
+* HTTP Network connectivity between attacker & target machines
+* On target machine: `curl` 
+	* `tar` for directory upload 
+* On attacker machine: 
+	* `xclip` to copy command on clipboard (not required)
+	* `tree`: to expose it trough server (not required)
+	* `dig`: to automatically find extarnal IP (not required)
+
+The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
 ## Install
 
