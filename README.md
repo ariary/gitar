@@ -86,7 +86,7 @@ go install github.com/ariary/gitar@latest
 
 ### Bidirectional exchange
 
-You can also use `push` and `pull` shortcuts from attacker machine. It does not require addtional requirements on both machines. To do so it is recommended to load `alias` (put them in your `~/[SHELL]rc`) and launch h gitar as follow:
+You can also use `push` and `pull` shortcuts from attacker machine. It does not require addtional requirements on both machines. To do so it is recommended to load `alias` (put them in your `~/[SHELL]rc`) and launch gitar as follow:
 ```shell
 gtrclean
 gitar -bidi
@@ -102,7 +102,6 @@ gtrclean #when you exchange is done
 #### Limits
 * Only work for file (does not work for `pullr` and `pushr`)
 * Increase considerably the number of http requests on target
-* 
 
 ### Load shortcut directly in your reverse shell
 
