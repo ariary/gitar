@@ -56,15 +56,15 @@ func DownloadHandler(h http.Handler) http.Handler {
 	})
 }
 
-//Handler for bidirectionnal exchange (target has previously set up a webhook to continuously pull this repo. Once downloaded, file is deleted)
-func BidirectionnalHandler(h http.Handler, cfg *config.Config) http.Handler {
+//Handler for bidirectional exchange (target has previously set up a webhook to continuously pull this repo. Once downloaded, file is deleted)
+func bidirectionalHandler(h http.Handler, cfg *config.Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		remote := "(" + r.RemoteAddr + ")"
 		h.ServeHTTP(w, r)
 		file := strings.Join(strings.Split(r.URL.Path, "/")[3:], "/")
 		if file != "" {
 			fmt.Println(color.Green(remote), "Download file", color.Italic("(push to remote)"), ":", color.Bold(file))
-			file = cfg.BidirectionnalDir + "/" + file
+			file = cfg.BidirectionalDir + "/" + file
 			err := exec.Command("rm", file).Run()
 			check.Check(err, "Error while removing "+file)
 		}
@@ -137,7 +137,7 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		fmt.Fprintf(w, pushrFunc)
 
 		//receive
-		if cfg.BidirectionnalDir != "" {
+		if cfg.BidirectionalDir != "" {
 			receiveFunc := `
 			receive(){
 				while true
@@ -314,7 +314,7 @@ func InitHandlers(cfg *config.Config) {
 	http.HandleFunc("/"+cfg.Secret+"/aliaswin", AliasWindowsHandler(cfg))
 
 	//"Bidirectional" endpoint
-	http.Handle("/"+cfg.Secret+"/bidirectional/", BidirectionnalHandler(http.StripPrefix("/"+cfg.Secret+"/bidirectional/", http.FileServer(http.Dir(cfg.BidirectionnalDir))), cfg))
+	http.Handle("/"+cfg.Secret+"/bidirectional/", bidirectionalHandler(http.StripPrefix("/"+cfg.Secret+"/bidirectional/", http.FileServer(http.Dir(cfg.BidirectionalDir))), cfg))
 
 	//Tree endpoint
 	http.HandleFunc("/"+cfg.Secret+"/gtree", TreeHandler(cfg))

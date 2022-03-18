@@ -101,6 +101,18 @@ push [FILENAME]
 gtrclean 
 ```
 
+***Notes:*** It will push files on remote where the `source` command occurs
+
+#### 🐋 Container and bidirectional exchange
+```shell
+BIDIR=$(mktemp-d);docker run -it --rm --cap-drop=all --cap-add=dac_override --net host --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" -v "$BIDIR:$BIDIR" ariary/gitar -bidi -bd $BIDIR
+```
+
+Then on attacker machine load shortcut:
+```shell
+gtrbidi.docker
+```
+
 #### Limits
 * Only work for file (does not work for `pullr` and `pushr`)
 * Increase considerably the number of http requests on target

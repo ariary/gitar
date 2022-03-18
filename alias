@@ -1,3 +1,4 @@
 alias gitar.safe='docker run -it --rm --cap-drop=all --cap-add=dac_override --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" ariary/gitar'
-alias gtrbidi='source /tmp/$(ls /tmp | grep "tmp.*gitar")'
-alias gtrclean='rm /tmp/tmp.* -rf'
+alias gtrbidi='source /tmp/$(ls /tmp | grep "gitar*")'
+alias gtrbidi.docker='source $(ls -d /tmp/tmp.*/* | grep "gitar")'
+alias gtrclean='rm /tmp/tmp.* -rf & rm /tmp/gitar* -f'
