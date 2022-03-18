@@ -213,6 +213,8 @@ func getHostIP() (ip string, err error) {
 			return "", err
 		}
 		ip = string(ipB)
+		ip = strings.Split(ip, "\n")[0]
+		ip = strings.Split(ip, " ")[0]
 		return ip, nil
 	}
 
