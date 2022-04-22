@@ -98,7 +98,7 @@ push [FILENAME]
 gtrclean 
 ```
 
-***Notes:*** It will push files on remote where the `source` command occurs
+***Notes:*** It will push files on remote within the directory where the `source` command occurs
 
 #### 🐋 Container and bidirectional exchange
 ```shell
