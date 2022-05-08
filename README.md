@@ -83,7 +83,7 @@ go install github.com/ariary/gitar@latest
 
 ### Bidirectional exchange
 
-You can also use `push` and `pull` shortcuts from attacker machine. It does not require addtional requirements on both machines. To do so it is recommended to load `alias` (put them in your `~/[SHELL]rc`) and launch gitar as follow:
+You can also use `push` and `pull` shortcuts from attacker machine, after shortcuts have been loaded on target. It does not require addtional requirements on both machines. To do so it is recommended to load `alias` (put them in your `~/[SHELL]rc`) and launch gitar as follow:
 ```shell
 gtrclean
 gitar -bidi
