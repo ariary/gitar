@@ -1,229 +1,61 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
-	"flag"
 	"fmt"
-	"log"
-	"math/rand"
-	"net/http"
 	"os"
-	"os/exec"
-	"strings"
-	"time"
 
-	"github.com/ariary/gitar/pkg/config"
-	"github.com/ariary/gitar/pkg/handlers"
-
-	"github.com/ariary/go-utils/pkg/clipboard"
+	"github.com/ariary/gitar/pkg/gitar"
+	"github.com/spf13/cobra"
 )
 
-var usage = `Usage of gitar: gitar [flags]
-Launch an HTTP server to ease file sharing
-  -e                       external reachable ip to server the HTTP server
-  -p                       specify HTTP server port
-  --ext                    detect the external IP to use
-  -d                       point to the directory of static file to serve
-  -u                       point to the directory where file are uploaded
-  --copy                   copy gitar set up command to clipboard (xclip required). True by default, disable with --copy=false
-  --tls                    use TLS (HTTPS server)
-  -c                       point to the cert directory (use with --tls)
-  --completion             enable completion for target machine (enabled by default). Works if target shell is bash, zsh
-  --alias-override-url     override url in /alias endpoint (useful if gitar server is behind a proxy)
-  --secret                 provide the secret that will prefix URL paths. (by default: auto-generated)
-  --dry-run                do not launch gitar server, only return command to load shortcuts
-  --windows                specify that the target machine is a windows
-  -b                       bidirectional exchange: push file on target from the attacker machine without installiing anything on target
-  -bd                      Specify bidirectional exchange dir
-
-  -h, --help                  prints help information 
-`
-
 func main() {
-	var detectExternal, windows, bidirectional bool
+	var detectExternal, windows, bidirectional, copyArg, tls, completion, noRun bool
+	var serverIp, bidiDir, port, dlDir, upDir, certDir, aliasUrl, secret string
 
-	serverIp := flag.String("e", "", "Server external reachable ip")
-	flag.BoolVar(&detectExternal, "ext", false, "Detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
-	flag.BoolVar(&windows, "windows", false, "Target machine is a windows (copy paste windows shortcuts)")
-	flag.BoolVar(&bidirectional, "bidi", false, "bidirectional exchange. You cna also push file on target from the attacker machine (without installign anything on target)")
-	bidiDir := flag.String("bd", "", "Bidirectional dir")
-	port := flag.String("p", "9237", "Port to serve on")
-	dlDir := flag.String("d", ".", "Point to the directory of static file to serve")
-	upDir := flag.String("u", "./", "Point to the directory where file are uploaded")
-	copyArg := flag.Bool("copy", true, "Copy gitar set up command to clipboard (xclip required)")
-	tls := flag.Bool("tls", false, "Use HTTPS server (TLS)")
-	certDir := flag.String("c", os.Getenv("HOME")+"/.gitar/certs", "Point to the cert directory")
-	completion := flag.Bool("completion", true, "Enable completion for target machine") //False for /bin/sh (don't have complete)
-	aliasUrl := flag.String("alias-override-url", "", "Override url in /alias endpoint (useful if gitar server is behind a proxy)")
-	secret := flag.String("secret", "", "Provide a secret that will prefix URL paths. (by default: auto-generated)")
-	noRun := flag.Bool("dry-run", false, "Do not launch gitar server, only return command to load shortcuts")
+	//CMD ROOT
+	var rootCmd = &cobra.Command{Use: "gitar",
+		Short: "Launch an HTTP server to ease file sharing",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Init
+			config := gitar.InitGitar(serverIp, detectExternal, windows, bidirectional, bidiDir, port, dlDir, upDir, copyArg, tls, certDir, completion, aliasUrl, secret, noRun)
 
-	flag.Usage = func() { fmt.Print(usage) }
-	flag.Parse()
+			//Set up messages
+			//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
+			gitar.SetUpMessage(config)
 
-	// external IP checks
-	if *serverIp == "" { //no ip provided
-		var err error
-		if detectExternal { //use external IP
-			*serverIp, err = getExternalIP()
-			if err != nil {
-				fmt.Println("Failed to detect external ip (dig):", err)
-				os.Exit(1)
-			}
-		} else { //use hostname ip
-			*serverIp, err = getHostIP()
-			if err != nil {
-				fmt.Println("Failed to detect host ip (hostname):", err)
-				os.Exit(1)
-			}
-		}
-
-	} else if detectExternal {
-		var err error
-		*serverIp, err = getExternalIP()
-		if err != nil {
-			fmt.Println("Failed to detect external ip (dig):", err)
-			os.Exit(1)
-		}
-
+			// Launch
+			gitar.LaunchGitar(config)
+		},
 	}
 
-	//Secret generation
-	if *secret == "" {
-		//generate random string
-		//*secret = encryption.GenerateRandom()
-		rand.Seed(time.Now().UnixNano())
-		var characters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789-_=")
-		b := make([]rune, 7)
-		for i := range b {
-			b[i] = characters[rand.Intn(len(characters))]
-		}
-		*secret = string(b)
+	//CMD OUTGOING/LIGHT
+	var cmdSend = &cobra.Command{
+		Use:   "send",
+		Short: "directly send a file to a target using different options",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("file:", args[0])
+		},
 	}
 
-	//bidirectional
-	var mktempDir string
-	if *bidiDir == "" {
-		*bidiDir = "/tmp"
-	}
-	if bidirectional {
-		mktemp, err := exec.Command("mktemp", "-p", *bidiDir, "-d").Output()
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			//Configure bidi directory
-			mktempDir = strings.ReplaceAll(string(mktemp), "\n", "")
+	// FLAGS
+	//token,pageid,p,external,shell,delay,server,config-from-page
+	rootCmd.Flags().StringVarP(&serverIp, "external", "e", "", "specify server external reachable ip/url")
+	rootCmd.Flags().BoolVarP(&detectExternal, "detect-external", "i", false, "detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
+	rootCmd.Flags().BoolVarP(&windows, "windows", "w", false, "specify that the target machine is a window")
+	rootCmd.Flags().StringVarP(&bidiDir, "bidi", "b", "", "bidirectional exchange: push file on target from the attacker machine without installing anything on target")
+	rootCmd.Flags().StringVarP(&port, "port", "p", "9237", "specify HTTP server port")
+	rootCmd.Flags().StringVarP(&dlDir, "dl-dir", "d", ".", "point to the directory of static files to serve")
+	rootCmd.Flags().StringVarP(&upDir, "up-dir", "u", "./", "point to the directory where file are uploaded")
+	rootCmd.Flags().BoolVarP(&copyArg, "copy", "c", true, "copy gitar set up command to clipboard (xclip required). True by default, disable with --copy=false")
+	rootCmd.Flags().BoolVarP(&tls, "tls", "t", false, "use TLS (HTTPS server)")
+	rootCmd.Flags().StringVarP(&certDir, "certs", "x", os.Getenv("HOME")+"/.gitar/certs", "point to the cert directory (use with --tls)")
+	rootCmd.Flags().BoolVarP(&completion, "completion", "m", true, "enable completion for target machine (enabled by default). Works if target shell is bash, zsh")
+	rootCmd.Flags().StringVarP(&aliasUrl, "alias-override-url ", "a", "", "override url in /alias endpoint (useful if gitar server is behind a proxy)")
+	rootCmd.Flags().StringVarP(&secret, "secret", "s", "", "provide the secret that will prefix URL paths. (by default: auto-generated)")
+	rootCmd.Flags().BoolVarP(&noRun, "dry-run", "", false, "do not launch gitar server, only return command to load shortcuts")
 
-			//Configure alias for host
-			//alias, err := exec.Command("mktemp", "--suffix=gitar").Output()
-			alias, err := exec.Command("mktemp", "-p", *bidiDir, "gitarXXXXXX").Output() //alpine compliant
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				aliasFile := strings.ReplaceAll(string(alias), "\n", "")
-				hostAliases := `
-				push(){
-					cp $1 ` + mktempDir + ` 
-				}
-				`
-				err = os.WriteFile(string(aliasFile), []byte(hostAliases), 0644)
-				if err != nil {
-					log.Fatal(err)
-				}
-			}
+	rootCmd.AddCommand(cmdSend)
+	rootCmd.Execute()
 
-		}
-	}
-
-	//Url construction
-	ip := *serverIp
-	p := *port
-	var protocol string
-	if *tls {
-		protocol = "-k https://"
-	} else {
-		protocol = "http://"
-	}
-
-	var url string
-	if *aliasUrl != "" {
-		url = *aliasUrl + "/" + *secret
-	} else {
-		url = protocol + ip + ":" + p + "/" + *secret
-	}
-
-	cfg := &config.Config{ServerIP: *serverIp, Port: *port, DownloadDir: *dlDir, UploadDir: *upDir + "/", IsCopied: *copyArg, Tls: *tls, Url: url, Completion: *completion, Secret: *secret, BidirectionalDir: mktempDir}
-
-	//Set up messages
-	//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
-	setUpMsgLinux := "source <(curl -s " + url + "/alias)"
-	setUpMsgWindows := "curl -s " + url + "/aliaswin > ./alias && doskey /macrofile=alias && del alias"
-	setUpMsg := setUpMsgLinux
-	if windows {
-		setUpMsg = setUpMsgWindows
-	}
-
-	if !*noRun {
-		fmt.Println("Set up gitar exchange on remote:")
-	}
-	fmt.Println(setUpMsg)
-	if *noRun {
-		os.Exit(0)
-	}
-
-	if *copyArg {
-		clipboard.Copy(setUpMsg)
-	}
-
-	//handlers
-	handlers.InitHandlers(cfg)
-
-	//Listen
-	var err error
-	if cfg.Tls {
-		err = http.ListenAndServeTLS(":"+cfg.Port, *certDir+"/server.crt", *certDir+"/server.key", nil)
-	} else {
-		err = http.ListenAndServe(":"+cfg.Port, nil)
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func getExternalIP() (ip string, err error) {
-	cmd := exec.Command("dig", "@resolver4.opendns.com", "myip.opendns.com", "+short")
-	ipB, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-	ip = string(ipB)
-	ip = strings.ReplaceAll(ip, "\n", "")
-	return ip, err
-}
-
-func getHostIP() (ip string, err error) {
-	cmd := exec.Command("hostname", "-I")
-	ipB, err := cmd.Output()
-	if err != nil {
-		//retry with -i
-		cmd := exec.Command("hostname", "-i")
-		ipB, err := cmd.Output()
-		if err != nil {
-			return "", err
-		}
-		ip = string(ipB)
-		ip = strings.Split(ip, "\n")[0]
-		ip = strings.Split(ip, " ")[0]
-		return ip, nil
-	}
-
-	//Only take first result
-	r := bytes.NewReader(ipB)
-	reader := bufio.NewReader(r)
-	line, _, err := reader.ReadLine()
-	ip = string(line)
-	ip = strings.Split(ip, "\n")[0]
-	ip = strings.Split(ip, " ")[0]
-	return ip, err
 }

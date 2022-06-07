@@ -8,8 +8,11 @@ type Config struct {
 	UploadDir        string
 	IsCopied         bool
 	Tls              bool
+	CertDir          string
 	Url              string
 	Completion       bool
 	Secret           string
 	BidirectionalDir string
+	Windows          bool
+	NoRun            bool
 }

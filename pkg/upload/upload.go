@@ -17,6 +17,7 @@ import (
 
 //Upload binary file <= 32Mb and return byte content
 //Note: upload with curl -X POST -F "file=@[BINARY_FILENAME]" http://[TARGET_IP:PORT]/push
+//Note: also handle multipart form for fun
 func UploadFile(upDir string, w http.ResponseWriter, r *http.Request) {
 	// Maximum upload of 10 MB files
 	r.ParseMultipartForm(32 << 20)
