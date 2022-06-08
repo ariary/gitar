@@ -16,3 +16,10 @@ type Config struct {
 	Windows          bool
 	NoRun            bool
 }
+
+type ConfigScp struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+}
