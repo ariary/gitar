@@ -44,11 +44,12 @@ func AskUserInputForScp(cfg *config.ConfigScp) {
 	var port, msg string
 	var portInput string
 	if cfg.Port == "" {
-		port = "[22]"
+		port = "22"
 	} else {
 		port = cfg.Port
 	}
-	msg = color.Blue("»") + " Port:" + color.Cyan(port) + " "
+
+	msg = color.Blue("»") + " Port:" + "[" + color.Cyan(port) + "] "
 	fmt.Printf(msg)
 	fmt.Scanln(&portInput)
 	if portInput == "" {
@@ -115,8 +116,9 @@ func waitHostInput(cfg *config.ConfigScp) {
 	var hostInput string
 	msg := color.Blue("»") + " Host:"
 	if cfg.User != "" {
-		msg += color.Cyan(cfg.User)
+		msg += "[" + color.Cyan(cfg.User) + "]"
 	}
+
 	msg += " "
 	fmt.Printf(msg)
 	fmt.Scanln(&hostInput)
@@ -135,7 +137,7 @@ func waitUsernameInput(cfg *config.ConfigScp) {
 	var userInput string
 	msg := color.Blue("»") + " User:"
 	if cfg.User != "" {
-		msg += color.Cyan(cfg.User)
+		msg += "[" + color.Cyan(cfg.User) + "]"
 	}
 	msg += " "
 	fmt.Printf(msg)
