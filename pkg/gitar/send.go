@@ -2,7 +2,9 @@ package gitar
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -14,10 +16,23 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-//ReadLastScpConfig: read last scp config to provide suggestions.
+//ReadLastScpConfig: read last scp config to provide suggestions. (~/.gitar/scp_conf)
 func ReadLastScpConfig(cfg *config.ConfigScp) {
-	//TODO: make config retieving
-	fmt.Println("read last config")
+	file, _ := ioutil.ReadFile(os.ExpandEnv("$HOME") + "/.gitar/scp_conf")
+
+	_ = json.Unmarshal([]byte(file), &cfg)
+}
+
+//UpdateScpConfig: update config file with config. (~/.gitar/scp_conf)
+func UpdateScpConfig(cfg *config.ConfigScp) {
+	if file, err := json.MarshalIndent(cfg, "", " "); err != nil {
+		fmt.Println("Error while updating scp configuration:", err)
+	} else {
+		if err = ioutil.WriteFile(os.ExpandEnv("$HOME")+"/.gitar/scp_conf", file, 0644); err != nil {
+			fmt.Println("Error while updating scp configuration:", err)
+		}
+	}
+
 }
 
 //Ask user to provide information needed
@@ -33,7 +48,7 @@ func AskUserInputForScp(cfg *config.ConfigScp) {
 	} else {
 		port = cfg.Port
 	}
-	msg = color.Blue("»") + " Port:" + color.Cyan(port)
+	msg = color.Blue("»") + " Port:" + color.Cyan(port) + " "
 	fmt.Printf(msg)
 	fmt.Scanln(&portInput)
 	if portInput == "" {
@@ -102,6 +117,7 @@ func waitHostInput(cfg *config.ConfigScp) {
 	if cfg.User != "" {
 		msg += color.Cyan(cfg.User)
 	}
+	msg += " "
 	fmt.Printf(msg)
 	fmt.Scanln(&hostInput)
 	if hostInput == "" {
@@ -121,6 +137,7 @@ func waitUsernameInput(cfg *config.ConfigScp) {
 	if cfg.User != "" {
 		msg += color.Cyan(cfg.User)
 	}
+	msg += " "
 	fmt.Printf(msg)
 	fmt.Scanln(&userInput)
 	if userInput == "" {
@@ -136,7 +153,7 @@ func waitUsernameInput(cfg *config.ConfigScp) {
 
 func waitPasswordInput(cfg *config.ConfigScp) {
 
-	msg := color.Blue("»") + " Password:"
+	msg := color.Blue("»") + " Password: "
 
 	fmt.Printf(msg)
 	password, err := terminal.ReadPassword(0)

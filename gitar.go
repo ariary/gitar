@@ -7,6 +7,7 @@ import (
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/gitar/pkg/gitar"
+	"github.com/ariary/gitar/pkg/utils"
 	"github.com/ariary/go-utils/pkg/color"
 	"github.com/spf13/cobra"
 )
@@ -75,18 +76,22 @@ func main() {
 		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			file := args[0]
-			var flags string
-			if isDir {
-				// utils.Tar(file, file+".tar.gz")
-				// file = file + ".tar.gz"
-				// defer func() {
-				// 	err := os.Remove(file)
-				// 	if err != nil {
-				// 		fmt.Printf("failed to delete archive %s: %s\n", file, err)
-				// 	}
-				// }()
 
-				// scp -r
+			//special case: directory
+			var flags string
+			fileInfo, _ := os.Stat(file)
+			if fileInfo.IsDir() {
+				utils.Tar(file, filepath.Base(file)+".tar.gz")
+				file = filepath.Base(file) + ".tar.gz"
+				defer func() {
+					err := os.Remove(file)
+					if err != nil {
+						fmt.Printf("failed to delete archive %s: %s\n", file, err)
+					}
+				}()
+
+				// scp -r, wait for go-scp library to handle it see https://github.com/bramvdbogaerde/go-scp/issues/61
+				//when it's done, comment above code
 				flags = " -r "
 			}
 			cfg := &config.ConfigScp{}
@@ -104,6 +109,8 @@ func main() {
 				return
 			}
 			gitar.ExecScp(cfg, file, remoteTarget)
+
+			gitar.UpdateScpConfig(cfg)
 		},
 	}
 	//scp flags
