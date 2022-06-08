@@ -171,7 +171,6 @@ func waitPasswordInput(cfg *config.ConfigScp) {
 	var previousPassword string
 	if cfg.Password != "" {
 		previousPassword = encryption.Xor(cfg.Password, KEY)
-		fmt.Println(previousPassword)
 		zPassword := previousPassword[:1] + "*********"
 		msg += "[" + color.Cyan(zPassword) + "]"
 	}
