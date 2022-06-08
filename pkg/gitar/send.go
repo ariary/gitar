@@ -12,9 +12,12 @@ import (
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/go-utils/pkg/color"
+	encryption "github.com/ariary/go-utils/pkg/encrypt"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+const KEY = "d385!/-gf45}ety"
 
 //ReadLastScpConfig: read last scp config to provide suggestions. (~/.gitar/scp_conf)
 func ReadLastScpConfig(cfg *config.ConfigScp) {
@@ -25,6 +28,8 @@ func ReadLastScpConfig(cfg *config.ConfigScp) {
 
 //UpdateScpConfig: update config file with config. (~/.gitar/scp_conf)
 func UpdateScpConfig(cfg *config.ConfigScp) {
+	// obfuscate password
+	cfg.Password = encryption.Xor(cfg.Password, KEY)
 	if file, err := json.MarshalIndent(cfg, "", " "); err != nil {
 		fmt.Println("Error while updating scp configuration:", err)
 	} else {
@@ -41,25 +46,7 @@ func AskUserInputForScp(cfg *config.ConfigScp) {
 	waitHostInput(cfg)
 
 	// port
-	var port, msg string
-	var portInput string
-	if cfg.Port == "" {
-		port = "22"
-	} else {
-		port = cfg.Port
-	}
-
-	msg = color.Blue("»") + " Port:" + "[" + color.Cyan(port) + "] "
-	fmt.Printf(msg)
-	fmt.Scanln(&portInput)
-	if portInput == "" {
-		if cfg.Port == "" {
-			cfg.Port = "22"
-		}
-		//else nothing
-	} else {
-		cfg.Port = portInput
-	}
+	waitPortInput(cfg)
 
 	// username
 	waitUsernameInput(cfg)
@@ -110,13 +97,15 @@ func ExecScp(cfg *config.ConfigScp, localFilename string, remoteFilename string)
 		fmt.Println("Error while copying file ", err)
 	}
 
+	fmt.Println("📬 Done!")
+
 }
 
 func waitHostInput(cfg *config.ConfigScp) {
 	var hostInput string
 	msg := color.Blue("»") + " Host:"
 	if cfg.User != "" {
-		msg += "[" + color.Cyan(cfg.User) + "]"
+		msg += "[" + color.Cyan(cfg.Host) + "]"
 	}
 
 	msg += " "
@@ -130,6 +119,28 @@ func waitHostInput(cfg *config.ConfigScp) {
 		}
 	} else {
 		cfg.Host = hostInput
+	}
+}
+
+func waitPortInput(cfg *config.ConfigScp) {
+	var port, msg string
+	var portInput string
+	if cfg.Port == "" {
+		port = "22"
+	} else {
+		port = cfg.Port
+	}
+
+	msg = color.Blue("»") + " Port:" + "[" + color.Cyan(port) + "] "
+	fmt.Printf(msg)
+	fmt.Scanln(&portInput)
+	if portInput == "" {
+		if cfg.Port == "" {
+			cfg.Port = "22"
+		}
+		//else nothing
+	} else {
+		cfg.Port = portInput
 	}
 }
 
@@ -157,16 +168,28 @@ func waitPasswordInput(cfg *config.ConfigScp) {
 
 	msg := color.Blue("»") + " Password: "
 
+	var previousPassword string
+	if cfg.Password != "" {
+		previousPassword = encryption.Xor(cfg.Password, KEY)
+		fmt.Println(previousPassword)
+		zPassword := previousPassword[:1] + "*********"
+		msg += "[" + color.Cyan(zPassword) + "]"
+	}
+
 	fmt.Printf(msg)
-	password, err := terminal.ReadPassword(0)
+	passwordB, err := terminal.ReadPassword(0)
 	fmt.Println()
 	if err != nil {
-		fmt.Println("erro while typing password:", password)
+		fmt.Println("erro while typing password:", previousPassword)
 	}
-	if string(password) == "" {
-		waitPasswordInput(cfg)
+	if string(passwordB) == "" {
+		if previousPassword == "" {
+			waitPasswordInput(cfg)
+		} else {
+			cfg.Password = previousPassword
+		}
 	} else {
-		cfg.Password = string(password)
+		cfg.Password = string(passwordB)
 	}
 
 }
