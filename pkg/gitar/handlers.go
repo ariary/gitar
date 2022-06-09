@@ -1,4 +1,4 @@
-package handlers
+package gitar
 
 import (
 	"fmt"
@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/ariary/gitar/pkg/config"
-	"github.com/ariary/gitar/pkg/upload"
 
 	"github.com/ariary/go-utils/pkg/check"
 	"github.com/ariary/go-utils/pkg/color"
@@ -26,7 +25,7 @@ func UploadHandler(cfg *config.Config) http.HandlerFunc {
 			fmt.Println("Get request")
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
-			upload.UploadFile(cfg.UploadDir, w, r)
+			UploadFile(cfg.UploadDir, w, r)
 		}
 	}
 }
@@ -41,7 +40,7 @@ func UploadDirectoryHandler(cfg *config.Config) http.HandlerFunc {
 			fmt.Println("Get request")
 			http.Error(w, "GET Bad request - Only POST accepted!", 400)
 		case "POST":
-			upload.UntarDirectory(cfg.UploadDir, w, r)
+			UntarDirectory(cfg.UploadDir, w, r)
 		}
 	}
 }

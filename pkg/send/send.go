@@ -1,4 +1,4 @@
-package gitar
+package send
 
 import (
 	"context"

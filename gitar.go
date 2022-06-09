@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/gitar/pkg/gitar"
+	"github.com/ariary/gitar/pkg/send"
 	"github.com/ariary/gitar/pkg/utils"
+	"github.com/ariary/gitar/pkg/webhook"
 	"github.com/ariary/go-utils/pkg/color"
 	"github.com/spf13/cobra"
 )
@@ -66,7 +70,7 @@ func main() {
 	sendCmd.PersistentFlags().StringVarP(&host, "host", "t", "", "specify host/target url to send the file")
 	sendCmd.PersistentFlags().StringVarP(&port, "port", "p", "", "specify target port")
 
-	// CMD SCP
+	// SUBCMD SCP
 	//TODO target directorie
 	var user, password, keyfile string
 	var withKey bool
@@ -96,11 +100,11 @@ func main() {
 				flags = " -r "
 			}
 			cfg := &config.ConfigScp{}
-			gitar.ReadLastScpConfig(cfg)
+			send.ReadLastScpConfig(cfg)
 			if !last {
 				//TO DO: determine which flags are already provided
 				// Send them to Asku user Input to determine if input is necessary
-				gitar.AskUserInputForScp(cfg, *cmd.Flags())
+				send.AskUserInputForScp(cfg, *cmd.Flags())
 			}
 
 			//scp -P 2222 go.mod root@192.168.1.100:/tmp/
@@ -111,9 +115,9 @@ func main() {
 			if verbose {
 				return
 			}
-			gitar.ExecScp(cfg, file, remoteTarget)
+			send.ExecScp(cfg, file, remoteTarget)
 
-			gitar.UpdateScpConfig(cfg)
+			send.UpdateScpConfig(cfg)
 		},
 	}
 	//scp flags
@@ -122,9 +126,46 @@ func main() {
 	scpCmd.PersistentFlags().StringVarP(&keyfile, "key", "i", "", "specify ssh private key file")
 	scpCmd.PersistentFlags().BoolVarP(&withKey, "with-key", "k", false, "specify if authentatication scheme udes key instead of password")
 
+	//CMD WEBHOOK
+	var proxy string
+	var webhookCmd = &cobra.Command{
+		Use:   "webhook",
+		Short: "HTTP handler to observe incoming request",
+		Args:  cobra.MinimumNArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
+			if proxy == "" {
+				//use middleware
+				mux := http.NewServeMux()
+
+				finalHandler := http.HandlerFunc(webhook.FinalHandler)
+				mux.Handle("/", webhook.Middleware(finalHandler))
+
+				fmt.Println("HTTP webhook  listening on", port, "...")
+				err := http.ListenAndServe(":"+port, mux)
+				log.Fatal(err)
+			} else {
+				// as a reverse proxy see https://blog.joshsoftware.com/2021/05/25/simple-and-powerful-reverseproxy-in-go/
+				fmt.Println(color.WhiteForeground("🔄"), color.Italic("Reverse proxy mode"))
+				proxy, err := webhook.NewProxy(proxy)
+				if err != nil {
+					panic(err)
+				}
+				fmt.Println("HTTP webhook listening on", port, "...")
+				http.HandleFunc("/", webhook.ProxyRequestHandler(proxy))
+				log.Fatal(http.ListenAndServe(":"+port, nil))
+			}
+
+		},
+	}
+
+	//webhook flags
+	webhookCmd.PersistentFlags().StringVarP(&proxy, "proxy", "", "", "use webhook as a reverse proxy")
+	webhookCmd.PersistentFlags().StringVarP(&port, "port", "p", "9292", "specify webhook port")
+
 	// SUBCOMMANDS
 	sendCmd.AddCommand(scpCmd)
 	rootCmd.AddCommand(sendCmd)
+	rootCmd.AddCommand(webhookCmd)
 	rootCmd.Execute()
 
 }

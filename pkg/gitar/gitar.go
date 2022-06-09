@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/ariary/gitar/pkg/config"
-	"github.com/ariary/gitar/pkg/handlers"
 	"github.com/ariary/go-utils/pkg/clipboard"
 	"github.com/ariary/go-utils/pkg/host"
 )
@@ -137,7 +136,7 @@ func SetUpMessage(config *config.Config) {
 
 func LaunchGitar(config *config.Config) {
 	//handlers
-	handlers.InitHandlers(config)
+	InitHandlers(config)
 
 	//Listen
 	var err error
