@@ -22,4 +22,5 @@ type ConfigScp struct {
 	Port     string
 	User     string
 	Password string
+	KeyFile  string
 }

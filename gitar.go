@@ -69,6 +69,7 @@ func main() {
 	// CMD SCP
 	//TODO target directorie
 	var user, password, keyfile string
+	var withKey bool
 	var scpCmd = &cobra.Command{
 		Use:     "scp",
 		Aliases: []string{"ssh"},
@@ -97,7 +98,9 @@ func main() {
 			cfg := &config.ConfigScp{}
 			gitar.ReadLastScpConfig(cfg)
 			if !last {
-				gitar.AskUserInputForScp(cfg)
+				//TO DO: determine which flags are already provided
+				// Send them to Asku user Input to determine if input is necessary
+				gitar.AskUserInputForScp(cfg, *cmd.Flags())
 			}
 
 			//scp -P 2222 go.mod root@192.168.1.100:/tmp/
@@ -117,6 +120,7 @@ func main() {
 	scpCmd.PersistentFlags().StringVarP(&user, "user", "u", "", "specify ssh user")
 	scpCmd.PersistentFlags().StringVarP(&password, "password", "x", "", "specify ssh user password")
 	scpCmd.PersistentFlags().StringVarP(&keyfile, "key", "i", "", "specify ssh private key file")
+	scpCmd.PersistentFlags().BoolVarP(&withKey, "with-key", "k", false, "specify if authentatication scheme udes key instead of password")
 
 	// SUBCOMMANDS
 	sendCmd.AddCommand(scpCmd)

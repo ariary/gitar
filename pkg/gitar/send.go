@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	scp "github.com/bramvdbogaerde/go-scp"
+	"github.com/spf13/pflag"
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/go-utils/pkg/color"
@@ -41,18 +42,60 @@ func UpdateScpConfig(cfg *config.ConfigScp) {
 }
 
 //Ask user to provide information needed
-func AskUserInputForScp(cfg *config.ConfigScp) {
+func AskUserInputForScp(cfg *config.ConfigScp, flags pflag.FlagSet) {
+	var err error
 	// host
-	waitHostInput(cfg)
+	if flags.Changed("host") {
+		if cfg.Host, err = flags.GetString("host"); err != nil {
+			fmt.Println("error while retrieving --host flag value:", err)
+			cfg.Host = waitInput("Host", cfg.Host)
+		}
+	} else {
+		cfg.Host = waitInput("Host", cfg.Host)
+	}
 
 	// port
-	waitPortInput(cfg)
+	if flags.Changed("port") {
+		if cfg.Host, err = flags.GetString("port"); err != nil {
+			fmt.Println("error while retrieving --password flag value:", err)
+			cfg.Port = waitInputWithDefault("Port", cfg.Port, "22")
+		}
+	} else {
+		cfg.Port = waitInputWithDefault("Port", cfg.Port, "22")
+	}
 
-	// username
-	waitUsernameInput(cfg)
+	if flags.Changed("key") || flags.Changed("with-key") {
+		//keyfile
+		if flags.Changed("key") {
+			if cfg.KeyFile, err = flags.GetString("key"); err != nil {
+				fmt.Println("error while retrieving --key flag value:", err)
+				cfg.KeyFile = waitInput("Key file", cfg.KeyFile)
+			}
+		} else {
+			cfg.KeyFile = waitInput("Key file", cfg.KeyFile)
+		}
+	} else {
+		// username
+		if flags.Changed("user") {
+			if cfg.User, err = flags.GetString("user"); err != nil {
+				fmt.Println("error while retrieving --user flag value:", err)
+				cfg.User = waitInput("User", cfg.User)
+			}
+		} else {
+			cfg.User = waitInput("User", cfg.User)
+		}
 
-	// password
-	waitPasswordInput(cfg)
+		// password
+		if flags.Changed("password") {
+			if cfg.Password, err = flags.GetString("password"); err != nil {
+				fmt.Println("error while retrieving --password flag value:", err)
+				cfg.Password = waitSecretInput("Password", cfg.Password)
+			}
+		} else {
+			cfg.Password = waitSecretInput("Password", cfg.Password)
+		}
+
+	}
 
 }
 
@@ -101,94 +144,161 @@ func ExecScp(cfg *config.ConfigScp, localFilename string, remoteFilename string)
 
 }
 
-func waitHostInput(cfg *config.ConfigScp) {
-	var hostInput string
-	msg := color.Blue("»") + " Host:"
-	if cfg.User != "" {
-		msg += "[" + color.Cyan(cfg.Host) + "]"
+//waitInputWithDefault: wait user input and return it. If no value is typed, it returns the previous value if not empty. return defaultValue otherwise.
+func waitInputWithDefault(name string, previous string, defaultValue string) (input string) {
+	if previous == "" { //no previous => previous -> default value
+		previous = defaultValue
 	}
 
-	msg += " "
+	msg := color.Blue("»") + " " + name + ":" + "[" + color.Cyan(previous) + "] "
 	fmt.Printf(msg)
-	fmt.Scanln(&hostInput)
-	if hostInput == "" {
-		if cfg.Host == "" {
-			waitHostInput(cfg)
-		} else {
-			return
-		}
-	} else {
-		cfg.Host = hostInput
-	}
-}
-
-func waitPortInput(cfg *config.ConfigScp) {
-	var port, msg string
-	var portInput string
-	if cfg.Port == "" {
-		port = "22"
-	} else {
-		port = cfg.Port
-	}
-
-	msg = color.Blue("»") + " Port:" + "[" + color.Cyan(port) + "] "
-	fmt.Printf(msg)
-	fmt.Scanln(&portInput)
-	if portInput == "" {
-		if cfg.Port == "" {
-			cfg.Port = "22"
-		}
+	fmt.Scanln(&input)
+	if input == "" {
+		return previous
 		//else nothing
 	} else {
-		cfg.Port = portInput
+		return input
 	}
 }
 
-func waitUsernameInput(cfg *config.ConfigScp) {
-	var userInput string
-	msg := color.Blue("»") + " User:"
-	if cfg.User != "" {
-		msg += "[" + color.Cyan(cfg.User) + "]"
+//waitInput: wait user input and return it. If no value is typed, it returns the previous value if not empty. Retry otherwise.
+func waitInput(name string, previous string) (input string) {
+	msg := color.Blue("»") + " " + name + ":"
+	if previous != "" {
+		msg += "[" + color.Cyan(previous) + "]"
 	}
 	msg += " "
 	fmt.Printf(msg)
-	fmt.Scanln(&userInput)
-	if userInput == "" {
-		if cfg.User == "" {
-			waitUsernameInput(cfg)
+	fmt.Scanln(&input)
+	if input == "" {
+		if previous == "" {
+			return waitInput(name, previous)
 		} else {
-			return
+			return previous
 		}
 	} else {
-		cfg.User = userInput
+		return input
 	}
 }
 
-func waitPasswordInput(cfg *config.ConfigScp) {
+//waitSecretInput: wait for user secret input and return it.(Do not show what is typed).
+//If no value is typed, it returns the previous value if not empty. Retry otherwise.
+func waitSecretInput(name string, previous string) (secretInput string) {
 
-	msg := color.Blue("»") + " Password: "
+	msg := color.Blue("»") + " " + name + ":"
 
-	var previousPassword string
-	if cfg.Password != "" {
-		previousPassword = encryption.Xor(cfg.Password, KEY)
-		zPassword := previousPassword[:1] + "*********"
-		msg += "[" + color.Cyan(zPassword) + "]"
+	var previousClear string
+	if previous != "" {
+		previousClear = encryption.Xor(previous, KEY)
+		zPreviousClear := previousClear[:1] + "*********"
+		msg += "[" + color.Cyan(zPreviousClear) + "]"
 	}
-
+	msg += " "
 	fmt.Printf(msg)
-	passwordB, err := terminal.ReadPassword(0)
+	secretB, err := terminal.ReadPassword(0)
 	fmt.Println()
 	if err != nil {
-		fmt.Println("erro while typing password:", previousPassword)
+		fmt.Println("erro while typing secret input:", previousClear)
 	}
-	if string(passwordB) == "" {
-		if previousPassword == "" {
-			waitPasswordInput(cfg)
+	if string(secretB) == "" {
+		if previousClear == "" {
+			return waitSecretInput(name, previous)
 		} else {
-			cfg.Password = previousPassword
+			return previousClear
 		}
 	} else {
-		cfg.Password = string(passwordB)
+		return string(secretB)
 	}
-
 }
+
+// func waitHostInput(cfg *config.ConfigScp) {
+// 	var hostInput string
+// 	msg := color.Blue("»") + " Host:"
+// 	if cfg.User != "" {
+// 		msg += "[" + color.Cyan(cfg.Host) + "]"
+// 	}
+
+// 	msg += " "
+// 	fmt.Printf(msg)
+// 	fmt.Scanln(&hostInput)
+// 	if hostInput == "" {
+// 		if cfg.Host == "" {
+// 			waitHostInput(cfg)
+// 		} else {
+// 			return
+// 		}
+// 	} else {
+// 		cfg.Host = hostInput
+// 	}
+// }
+
+// func waitPortInput(cfg *config.ConfigScp) {
+// 	var port, msg string
+// 	var portInput string
+// 	if cfg.Port == "" {
+// 		port = "22"
+// 	} else {
+// 		port = cfg.Port
+// 	}
+
+// 	msg = color.Blue("»") + " Port:" + "[" + color.Cyan(port) + "] "
+// 	fmt.Printf(msg)
+// 	fmt.Scanln(&portInput)
+// 	if portInput == "" {
+// 		if cfg.Port == "" {
+// 			cfg.Port = "22"
+// 		}
+// 		//else nothing
+// 	} else {
+// 		cfg.Port = portInput
+// 	}
+// }
+
+// func waitUsernameInput(cfg *config.ConfigScp) {
+// 	var userInput string
+// 	msg := color.Blue("»") + " User:"
+// 	if cfg.User != "" {
+// 		msg += "[" + color.Cyan(cfg.User) + "]"
+// 	}
+// 	msg += " "
+// 	fmt.Printf(msg)
+// 	fmt.Scanln(&userInput)
+// 	if userInput == "" {
+// 		if cfg.User == "" {
+// 			waitUsernameInput(cfg)
+// 		} else {
+// 			return
+// 		}
+// 	} else {
+// 		cfg.User = userInput
+// 	}
+// }
+
+// func waitPasswordInput(cfg *config.ConfigScp) {
+
+// 	msg := color.Blue("»") + " Password: "
+
+// 	var previousPassword string
+// 	if cfg.Password != "" {
+// 		previousPassword = encryption.Xor(cfg.Password, KEY)
+// 		zPassword := previousPassword[:1] + "*********"
+// 		msg += "[" + color.Cyan(zPassword) + "]"
+// 	}
+
+// 	fmt.Printf(msg)
+// 	passwordB, err := terminal.ReadPassword(0)
+// 	fmt.Println()
+// 	if err != nil {
+// 		fmt.Println("erro while typing password:", previousPassword)
+// 	}
+// 	if string(passwordB) == "" {
+// 		if previousPassword == "" {
+// 			waitPasswordInput(cfg)
+// 		} else {
+// 			cfg.Password = previousPassword
+// 		}
+// 	} else {
+// 		cfg.Password = string(passwordB)
+// 	}
+
+// }
