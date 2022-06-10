@@ -2,17 +2,19 @@ package webhook
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/go-utils/pkg/color"
 )
 
 // NewProxy takes target host and creates a reverse proxy
-func NewProxy(targetHost string, history *History) (*httputil.ReverseProxy, error) {
+func NewProxy(targetHost string, cfg *config.ConfigWebHook) (*httputil.ReverseProxy, error) {
 	url, err := url.Parse(targetHost)
 	if err != nil {
 		return nil, err
@@ -23,7 +25,7 @@ func NewProxy(targetHost string, history *History) (*httputil.ReverseProxy, erro
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
-		ProcessRequest(req, history)
+		ProcessRequest(req, cfg)
 	}
 
 	proxy.ModifyResponse = ProcessResponse()
@@ -39,11 +41,11 @@ func ProxyRequestHandler(proxy *httputil.ReverseProxy) func(http.ResponseWriter,
 	}
 }
 
-func ProcessRequest(req *http.Request, hist *History) {
+func ProcessRequest(req *http.Request, cfg *config.ConfigWebHook) {
 	//remote addr
 	remote := strings.Split(req.RemoteAddr, ":")[0]
-	if hist.LastIp != remote {
-		hist.LastIp = remote
+	if cfg.History.LastIp != remote {
+		cfg.History.LastIp = remote
 		remote = color.Yellow(remote)
 	} else {
 		remote = color.Dim(remote)
@@ -53,7 +55,7 @@ func ProcessRequest(req *http.Request, hist *History) {
 	//time
 	now := time.Now()
 	rTime := time.Now().Format("09/Jun/2006 15:04:05")
-	expiration := hist.LastTime.Add(2 * time.Minute)
+	expiration := cfg.History.LastTime.Add(2 * time.Minute)
 	// get the diff
 	diff := expiration.Sub(now)
 	if diff < 0 {
@@ -63,7 +65,7 @@ func ProcessRequest(req *http.Request, hist *History) {
 	}
 	log += color.Dim("[") + rTime + color.Dim("]")
 	log += " ― ― "
-	hist.LastTime = now
+	cfg.History.LastTime = now
 	//method
 	switch req.Method {
 	case "GET":
@@ -73,8 +75,37 @@ func ProcessRequest(req *http.Request, hist *History) {
 	default:
 		log += color.Magenta(req.Method) + " "
 	}
-	log += req.URL.Path
-	// req.Header.Set("X-Proxy", "Simple-Reverse-Proxy")
+	//path
+	path := req.URL.Path
+	if path != cfg.History.LastPath {
+		cfg.History.LastPath = path
+		path = color.Cyan(path)
+	}
+	log += path
+	// filter params & body
+	if cfg.FullBody {
+		if bodyB, err := ioutil.ReadAll(req.Body); err != nil {
+			fmt.Println(color.Red("error while reading request body"))
+		} else {
+			log += "\n" + string(bodyB)
+		}
+	} else {
+		var param string
+		req.ParseForm()
+		for i := 0; i < len(cfg.Params); i++ {
+			log += "\n"
+			if req.Method == "GET" {
+				param = req.URL.Query().Get(cfg.Params[i])
+			} else {
+				param = req.PostForm.Get(cfg.Params[i])
+			}
+			if param != "" {
+				log += "\t" + color.Teal(cfg.Params[i]) + ": " + param
+			} else {
+				log += "\t" + color.Dim(cfg.Params[i]) + ": "
+			}
+		}
+	}
 	fmt.Println(log)
 }
 func errorHandler() func(http.ResponseWriter, *http.Request, error) {

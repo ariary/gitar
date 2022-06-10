@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // Config holds the gitar configuration
 type Config struct {
 	ServerIP         string
@@ -23,4 +25,17 @@ type ConfigScp struct {
 	User     string
 	Password string
 	KeyFile  string
+}
+
+// Webhook
+type ConfigWebHook struct {
+	History  History
+	Params   []string
+	FullBody bool
+}
+
+type History struct {
+	LastIp   string
+	LastTime time.Time
+	LastPath string
 }

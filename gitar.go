@@ -128,18 +128,19 @@ func main() {
 
 	//CMD WEBHOOK
 	var proxy string
+	cfg := config.ConfigWebHook{}
 	var webhookCmd = &cobra.Command{
 		Use:   "webhook",
 		Short: "HTTP handler to observe incoming request",
 		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-			history := webhook.History{}
+
 			if proxy == "" {
 				//use middleware
 				mux := http.NewServeMux()
 
 				finalHandler := http.HandlerFunc(webhook.FinalHandler)
-				mux.Handle("/", webhook.Middleware(finalHandler, &history))
+				mux.Handle("/", webhook.Middleware(finalHandler, &cfg))
 
 				fmt.Println("HTTP webhook  listening on", port, "...")
 				err := http.ListenAndServe(":"+port, mux)
@@ -147,7 +148,7 @@ func main() {
 			} else {
 				// as a reverse proxy see https://blog.joshsoftware.com/2021/05/25/simple-and-powerful-reverseproxy-in-go/
 				fmt.Println(color.WhiteForeground("🔄"), color.Italic("Reverse proxy mode"))
-				proxy, err := webhook.NewProxy(proxy, &history)
+				proxy, err := webhook.NewProxy(proxy, &cfg)
 				if err != nil {
 					panic(err)
 				}
@@ -162,6 +163,8 @@ func main() {
 	//webhook flags
 	webhookCmd.PersistentFlags().StringVarP(&proxy, "proxy", "", "", "use webhook as a reverse proxy")
 	webhookCmd.PersistentFlags().StringVarP(&port, "port", "p", "9292", "specify webhook port")
+	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.Params, "params", "f", cfg.Params, "filter incoming request parameter")
+	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullBody, "body", "b", false, "print full body of POST request")
 	//response overriding (status code and headers)
 	//request filter (only show if), method,header,param
 	//request logs: header,param
