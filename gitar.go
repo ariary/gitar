@@ -133,12 +133,13 @@ func main() {
 		Short: "HTTP handler to observe incoming request",
 		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
+			history := webhook.History{}
 			if proxy == "" {
 				//use middleware
 				mux := http.NewServeMux()
 
 				finalHandler := http.HandlerFunc(webhook.FinalHandler)
-				mux.Handle("/", webhook.Middleware(finalHandler))
+				mux.Handle("/", webhook.Middleware(finalHandler, &history))
 
 				fmt.Println("HTTP webhook  listening on", port, "...")
 				err := http.ListenAndServe(":"+port, mux)
@@ -146,7 +147,7 @@ func main() {
 			} else {
 				// as a reverse proxy see https://blog.joshsoftware.com/2021/05/25/simple-and-powerful-reverseproxy-in-go/
 				fmt.Println(color.WhiteForeground("🔄"), color.Italic("Reverse proxy mode"))
-				proxy, err := webhook.NewProxy(proxy)
+				proxy, err := webhook.NewProxy(proxy, &history)
 				if err != nil {
 					panic(err)
 				}
@@ -161,6 +162,11 @@ func main() {
 	//webhook flags
 	webhookCmd.PersistentFlags().StringVarP(&proxy, "proxy", "", "", "use webhook as a reverse proxy")
 	webhookCmd.PersistentFlags().StringVarP(&port, "port", "p", "9292", "specify webhook port")
+	//response overriding (status code and headers)
+	//request filter (only show if), method,header,param
+	//request logs: header,param
+	//show full request
+	//serve file also
 
 	// SUBCOMMANDS
 	sendCmd.AddCommand(scpCmd)

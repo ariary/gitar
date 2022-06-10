@@ -4,9 +4,9 @@ import (
 	"net/http"
 )
 
-func Middleware(next http.Handler) http.Handler {
+func Middleware(next http.Handler, history *History) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ProcessRequest(r)
+		ProcessRequest(r, history)
 		next.ServeHTTP(w, r)
 	})
 }

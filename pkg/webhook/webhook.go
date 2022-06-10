@@ -12,7 +12,7 @@ import (
 )
 
 // NewProxy takes target host and creates a reverse proxy
-func NewProxy(targetHost string) (*httputil.ReverseProxy, error) {
+func NewProxy(targetHost string, history *History) (*httputil.ReverseProxy, error) {
 	url, err := url.Parse(targetHost)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func NewProxy(targetHost string) (*httputil.ReverseProxy, error) {
 	originalDirector := proxy.Director
 	proxy.Director = func(req *http.Request) {
 		originalDirector(req)
-		ProcessRequest(req)
+		ProcessRequest(req, history)
 	}
 
 	proxy.ModifyResponse = ProcessResponse()
@@ -39,11 +39,32 @@ func ProxyRequestHandler(proxy *httputil.ReverseProxy) func(http.ResponseWriter,
 	}
 }
 
-func ProcessRequest(req *http.Request) {
-	log := color.Dim(strings.Split(req.RemoteAddr, ":")[0])
+func ProcessRequest(req *http.Request, hist *History) {
+	//remote addr
+	remote := strings.Split(req.RemoteAddr, ":")[0]
+	if hist.LastIp != remote {
+		hist.LastIp = remote
+		remote = color.Yellow(remote)
+	} else {
+		remote = color.Dim(remote)
+	}
+	log := remote
 	log += color.Dim(" ~ ")
-	log += color.Dim("[" + time.Now().Format("09/Jun/2006 15:04:05") + "]")
+	//time
+	now := time.Now()
+	rTime := time.Now().Format("09/Jun/2006 15:04:05")
+	expiration := hist.LastTime.Add(2 * time.Minute)
+	// get the diff
+	diff := expiration.Sub(now)
+	if diff < 0 {
+		rTime = color.Yellow(rTime)
+	} else {
+		rTime = color.Dim(rTime)
+	}
+	log += color.Dim("[") + rTime + color.Dim("]")
 	log += " ― ― "
+	hist.LastTime = now
+	//method
 	switch req.Method {
 	case "GET":
 		log += color.Blue(req.Method) + " "
