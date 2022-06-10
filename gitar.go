@@ -103,8 +103,6 @@ func main() {
 			cfg := &config.ConfigScp{}
 			send.ReadLastScpConfig(cfg)
 			if !last {
-				//TO DO: determine which flags are already provided
-				// Send them to Asku user Input to determine if input is necessary
 				send.AskUserInputForScp(cfg, *cmd.Flags())
 			}
 
@@ -162,12 +160,12 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
+				if len(statics)>0 {
+					fmt.Println("--serve/-f option cannot be used with --proxy")
+					os.Exit(92)
+				}
 				webhookBanner(cfg, port, statics)
 				http.HandleFunc("/", webhook.ProxyRequestHandler(proxy))
-				for i := 0; i < len(statics); i++ {
-					fs := http.FileServer(http.Dir(statics[i]))
-					http.Handle("/", webhook.Middleware(fs, &cfg))
-				}
 				log.Fatal(http.ListenAndServe(":"+port, nil))
 			}
 
