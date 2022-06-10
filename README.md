@@ -93,7 +93,7 @@ Use this mode if you want to have some logs about incoming HTTP requests. It ena
 * Log request information
 	* request parameter values
 	* request header values
-* Override reponse
+* Override response
 	* header 
 * Forward request to another http server (~ local logging middleware)
 * Serve directory
