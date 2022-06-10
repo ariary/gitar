@@ -179,6 +179,7 @@ func main() {
 	webhookCmd.PersistentFlags().StringVarP(&port, "port", "p", "9292", "specify webhook port")
 	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.Params, "params", "P", cfg.Params, "filter incoming request parameter. Can be used multiple times.")
 	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullBody, "body", "b", false, "print full body of POST request")
+	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.ReqHeaders, "request-header", "C", cfg.ReqHeaders, "catch request header Can be used multiple times")
 	webhookCmd.PersistentFlags().StringSliceVarP(&headers, "header", "H", headers, "add/override response header header (in form of name:value to add header OR to remove header: name:). Can be used multiple times.")
 	webhookCmd.PersistentFlags().StringSliceVarP(&statics, "serve", "f", statics, "specifiy folder to serve static file. Can be used multiple times. (can't be used with proxy mode)")
 	//TODO: full request + status code
@@ -201,8 +202,15 @@ func webhookBanner(cfg config.ConfigWebHook, port string, statics []string) {
 		fmt.Println()
 	}
 	//header
+	if len(cfg.Params) > 0 {
+		fmt.Println(color.BlueForeground("👁️ Catch request headers:"))
+		for i := 0; i < len(cfg.ReqHeaders); i++ {
+			fmt.Println("  • " + cfg.ReqHeaders[i])
+		}
+		fmt.Println()
+	}
 	if len(cfg.DelHeaders) > 0 {
-		fmt.Println(color.MagentaForeground("🗑️ Delete response headers:"))
+		fmt.Println(color.TealForeground("🗑️ Delete response headers:"))
 		for i := 0; i < len(cfg.DelHeaders); i++ {
 			fmt.Println("  • " + cfg.DelHeaders[i])
 		}
@@ -210,7 +218,7 @@ func webhookBanner(cfg config.ConfigWebHook, port string, statics []string) {
 	}
 
 	if len(cfg.OverrideHeaders) > 0 {
-		fmt.Println(color.TealForeground("✍️ Override/addi response headers:"))
+		fmt.Println(color.TealForeground("✍️ Override/add response headers:"))
 		for header, value := range cfg.OverrideHeaders {
 			fmt.Println("  • " + header + ": " + strings.Join(value, ","))
 		}

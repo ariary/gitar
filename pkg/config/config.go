@@ -38,6 +38,7 @@ type ConfigWebHook struct {
 	FullBody        bool
 	OverrideHeaders map[string][]string
 	DelHeaders      []string
+	ReqHeaders      []string
 }
 
 type History struct {

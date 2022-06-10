@@ -82,6 +82,17 @@ func ProcessRequest(req *http.Request, cfg *config.ConfigWebHook) {
 		path = color.Cyan(path)
 	}
 	log += path
+	// filter header
+	rHeaders := req.Header
+	for i := 0; i < len(cfg.ReqHeaders); i++ {
+		log += "\n"
+		value := rHeaders.Get(cfg.ReqHeaders[i])
+		if value != "" {
+			log += "\t" + color.Teal(cfg.ReqHeaders[i]) + ": " + value
+		} else {
+			log += "\t" + cfg.ReqHeaders[i] + " header was not found in request"
+		}
+	}
 	// filter params & body
 	if cfg.FullBody {
 		if bodyB, err := ioutil.ReadAll(req.Body); err != nil {
