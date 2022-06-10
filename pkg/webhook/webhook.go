@@ -28,7 +28,7 @@ func NewProxy(targetHost string, cfg *config.ConfigWebHook) (*httputil.ReversePr
 		ProcessRequest(req, cfg)
 	}
 
-	proxy.ModifyResponse = ProcessResponse()
+	proxy.ModifyResponse = ProcessResponse(cfg)
 	proxy.ErrorHandler = errorHandler()
 
 	return proxy, nil
@@ -115,13 +115,33 @@ func errorHandler() func(http.ResponseWriter, *http.Request, error) {
 	}
 }
 
-func ProcessResponse() func(*http.Response) error {
+//ProcessResponse & ProcessResponseWriter are the same fucntion, but do not find a way do use only one
+
+func ProcessResponse(cfg *config.ConfigWebHook) func(*http.Response) error {
 	return func(resp *http.Response) error {
-		resp.Header.Set("X-Proxy", "Magical")
+		respHeader := resp.Header
+		// override/add headers
+		for header, value := range cfg.OverrideHeaders {
+			delete(respHeader, header)
+			respHeader[header] = append(respHeader[header], value...)
+		}
+		// delete headers
+		for i := 0; i < len(cfg.DelHeaders); i++ {
+			delete(respHeader, cfg.DelHeaders[i])
+		}
 		return nil
 	}
 }
 
-func ProcessResponseWriter(resp http.ResponseWriter) {
-	resp.Header().Set("X-Proxy", "Magical")
+func ProcessResponseWriter(cfg *config.ConfigWebHook, resp http.ResponseWriter) {
+	respHeader := resp.Header()
+	// override/add headers
+	for header, value := range cfg.OverrideHeaders {
+		delete(respHeader, header)
+		respHeader[header] = append(respHeader[header], value...)
+	}
+	// delete headers
+	for i := 0; i < len(cfg.DelHeaders); i++ {
+		delete(respHeader, cfg.DelHeaders[i])
+	}
 }

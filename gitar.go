@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/gitar/pkg/gitar"
@@ -128,32 +129,45 @@ func main() {
 
 	//CMD WEBHOOK
 	var proxy string
+	var headers, statics []string
 	cfg := config.ConfigWebHook{}
 	var webhookCmd = &cobra.Command{
 		Use:   "webhook",
 		Short: "HTTP handler to observe incoming request",
 		Args:  cobra.MinimumNArgs(0),
 		Run: func(cmd *cobra.Command, args []string) {
-
+			cfg.OverrideHeaders, cfg.DelHeaders = config.ParseHeadersFromCLI(headers)
 			if proxy == "" {
 				//use middleware
 				mux := http.NewServeMux()
 
-				finalHandler := http.HandlerFunc(webhook.FinalHandler)
-				mux.Handle("/", webhook.Middleware(finalHandler, &cfg))
+				if len(statics) == 0 {
+					finalHandler := http.HandlerFunc(webhook.FinalProcessResponseHandler(&cfg))
+					mux.Handle("/", webhook.Middleware(finalHandler, &cfg))
+				} else {
+					for i := 0; i < len(statics); i++ {
+						fileHandler := http.FileServer(http.Dir(statics[i]))
+						finalHandler := webhook.ProcessResponseHandler(fileHandler, &cfg)
+						mux.Handle("/", webhook.Middleware(finalHandler, &cfg))
+					}
+				}
 
-				fmt.Println("HTTP webhook  listening on", port, "...")
+				webhookBanner(cfg, port, statics)
 				err := http.ListenAndServe(":"+port, mux)
 				log.Fatal(err)
 			} else {
 				// as a reverse proxy see https://blog.joshsoftware.com/2021/05/25/simple-and-powerful-reverseproxy-in-go/
-				fmt.Println(color.WhiteForeground("🔄"), color.Italic("Reverse proxy mode"))
+				fmt.Println(color.WhiteForeground("🔄"), color.Italic("Reverse proxy mode (to "+proxy+")"))
 				proxy, err := webhook.NewProxy(proxy, &cfg)
 				if err != nil {
 					panic(err)
 				}
-				fmt.Println("HTTP webhook listening on", port, "...")
+				webhookBanner(cfg, port, statics)
 				http.HandleFunc("/", webhook.ProxyRequestHandler(proxy))
+				for i := 0; i < len(statics); i++ {
+					fs := http.FileServer(http.Dir(statics[i]))
+					http.Handle("/", webhook.Middleware(fs, &cfg))
+				}
 				log.Fatal(http.ListenAndServe(":"+port, nil))
 			}
 
@@ -163,13 +177,11 @@ func main() {
 	//webhook flags
 	webhookCmd.PersistentFlags().StringVarP(&proxy, "proxy", "", "", "use webhook as a reverse proxy")
 	webhookCmd.PersistentFlags().StringVarP(&port, "port", "p", "9292", "specify webhook port")
-	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.Params, "params", "f", cfg.Params, "filter incoming request parameter")
+	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.Params, "params", "P", cfg.Params, "filter incoming request parameter. Can be used multiple times.")
 	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullBody, "body", "b", false, "print full body of POST request")
-	//response overriding (status code and headers)
-	//request filter (only show if), method,header,param
-	//request logs: header,param
-	//show full request
-	//serve file also
+	webhookCmd.PersistentFlags().StringSliceVarP(&headers, "header", "H", headers, "add/override response header header (in form of name:value to add header OR to remove header: name:). Can be used multiple times.")
+	webhookCmd.PersistentFlags().StringSliceVarP(&statics, "serve", "f", statics, "specifiy folder to serve static file. Can be used multiple times. (can't be used with proxy mode)")
+	//TODO: full request + status code
 
 	// SUBCOMMANDS
 	sendCmd.AddCommand(scpCmd)
@@ -177,4 +189,43 @@ func main() {
 	rootCmd.AddCommand(webhookCmd)
 	rootCmd.Execute()
 
+}
+
+func webhookBanner(cfg config.ConfigWebHook, port string, statics []string) {
+	//params
+	if len(cfg.Params) > 0 {
+		fmt.Println(color.BlueForeground("👁️ Catch request parameters:"))
+		for i := 0; i < len(cfg.Params); i++ {
+			fmt.Println("  • " + cfg.Params[i])
+		}
+		fmt.Println()
+	}
+	//header
+	if len(cfg.DelHeaders) > 0 {
+		fmt.Println(color.MagentaForeground("🗑️ Delete response headers:"))
+		for i := 0; i < len(cfg.DelHeaders); i++ {
+			fmt.Println("  • " + cfg.DelHeaders[i])
+		}
+		fmt.Println()
+	}
+
+	if len(cfg.OverrideHeaders) > 0 {
+		fmt.Println(color.TealForeground("✍️ Override/addi response headers:"))
+		for header, value := range cfg.OverrideHeaders {
+			fmt.Println("  • " + header + ": " + strings.Join(value, ","))
+		}
+		fmt.Println()
+	}
+	//static files
+	if len(statics) > 0 {
+		fmt.Println(color.YellowForeground("📁 Serving static folders:"))
+		for i := 0; i < len(statics); i++ {
+			if path, err := filepath.Abs(statics[i]); err == nil {
+				fmt.Println("  • " + path)
+			}
+
+		}
+		fmt.Println()
+	}
+	fmt.Println("HTTP webhook  listening on", "0.0.0.0:"+port, "...")
 }
