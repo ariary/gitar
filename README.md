@@ -2,7 +2,7 @@
 <h1>gitar</h1>
 <img src=https://github.com/ariary/gitar/blob/main/img/gitar-logo.png width=150>
 	
-<strong>📡 A more sophisticated python HTTP server sibling <br>🎸 with even simpler interactions for file exchange (Pentest/CTF) </strong>
+<strong>📡 A more sophisticated python HTTP server sibling <br>🎸 focusing on having the simplest interactions for file exchange (Pentest/CTF)<br>🎵 with additional functionalities: <a href=#send-mode>quick file sending</a> and <a href=#webhook-mode>HTTP webhook logging</a> </strong>
 <br>
 </div>
 
@@ -73,6 +73,34 @@ docker run -it --rm --cap-drop=all --cap-add=dac_override --user $(id -u):$(id -
 
 The aim is to keep "target requirements" as fit as possible. Attacker machine requirements are not a big deal as we have plenty control over it and time to configure it.
 
+## Additional Functionalities
+
+### `send` mode
+
+Use this mode to quickly send a file to a target machine using different method/protocol. The advantage is that you do not have to remember the command line.
+
+It also have a kind of memory. with the `-l` flag it will use the previous configuration to send the file.
+```shell
+# send /img folder using scp with user root to target.com
+gitar send scp -t target.com -u root /img
+# now send exploit.sh to the same hsot
+gitar send -l exploit.sh
+```
+
+### `webhook` mode
+
+Use this mode if you want to have some logs about incoming HTTP requests. It enables us to:
+* Log request information
+	* request parameter values
+	* request header values
+* Override reponse
+	* header 
+* Forward request to another http server (~ local logging middleware)
+* Serve directory
+```shell
+# log incoming request and retrieve payload parameter value
+gitar webhook -P payload
+```
 ## Install
 
 ```shell
