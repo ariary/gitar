@@ -52,7 +52,7 @@ The following steps expose files of current directory. Files uploaded by remote 
 
 On **Attacker machine**: 
 ```shell
-docker run -it --rm --cap-drop=all --cap-add=dac_override --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" ariary/gitar
+docker run -it --rm --net host --cap-drop=all --cap-add=dac_override --user $(id -u):$(id -g)  -v "${PWD}:/gitar/exchange" ariary/gitar
 ```
 
 **You can now `push`or `pull` file being more safe [🎶](#tldr---and-listen-music)**
