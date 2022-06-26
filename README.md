@@ -79,7 +79,7 @@ The aim is to keep "target requirements" as fit as possible. Attacker machine re
 
 Use this mode to quickly send a file to a target machine using different method/protocol. The advantage is that you do not have to remember the command line (if required field is not specified with flags it will be asked in a prompt).
 
-It also have a kind of memory. with the `-l` flag it will use the previous configuration to send the file.
+It also has a kind of memory. with the `-l` flag it will use the previous configuration to send the file.
 ```shell
 # send /img folder using scp with user root to target.com
 gitar send scp -t target.com -u root /img
