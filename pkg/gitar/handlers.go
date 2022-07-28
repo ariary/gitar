@@ -210,78 +210,58 @@ func getCompletion(dir string) (completions string) {
 	return completions
 }
 
-//Handler that output shortcut aimed for the target machines (source it). It is for linux machines
-func AliasWindowsHandler(cfg *config.Config) http.HandlerFunc {
+//Handler that output shortcut aimed for the target machines (source it). It is for windows machine with curl alias or Invoke-WebMethod
+func AliasWindowsPSCurlHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		url := cfg.Url
 
 		//pull
-		pullFunc := "pull(){\nFILE=$(echo $1| rev | cut -d\"/\" -f 1 | rev)\ncurl -s " + url + "/pull/$1 > $FILE\n}\n"
+		pullFunc := "function pull([string]$file){\nInvoke-WebRequest " + url + "/pull/$file -OutFile $file\n}\n"
 		fmt.Fprintf(w, pullFunc)
 
-		//pullr
-		statusFunc := "status(){\ncurl -s -o /dev/null -w \"%s{http_code}\" " + url + "/pull/$1\n}\n"
-		fmt.Fprintf(w, statusFunc, "%")
-
-		getAllFillesFunc := "getFiles(){\ncurl -L -s " + url + "/pull/$1 | grep \"<a\" | cut -d \"\\\"\" -f 2\n}\n"
-		fmt.Fprintf(w, getAllFillesFunc)
-
-		isDirFunc := "isDir(){\n[[ \"$1\" == */ ]]\n}\n"
-		fmt.Fprintf(w, isDirFunc)
-
-		pullrFunc := `pullr(){
-			STATUS=$(status $1)
-			if [ $STATUS -eq 301  ]
-				mkdir -p $1
-			then
-				FILES=$(getFiles "$1")
-			fi
-			#fix zsh bug
-			local IFS=$'\n'
-			if [ $ZSH_VERSION ]; then
-			  setopt sh_word_split
-			fi
-			
-			for value in $FILES
-			do
-				if isDir $value
-				then
-					value=${value::-1}
-				fi
-				file="$1/$value"
-				STATUS=$(status $file)
-				if [ $STATUS -eq 301  ]
-				then
-					# echo "$file"
-					pullr $file
-				else
-					# echo "$file"
-					pull $file
-					mv $value $file
-				fi
-			done
-			}
-			`
-		//pullrFunc := "pullr(){\nSTATUS=$(status $1)\nif [ $STATUS -eq 301  ]\nmkdir $1\nthen\nFILES=$(getFiles \"$1\")\nfor value in $FILES\ndo\nif isDir $value\nthen\nvalue=${value::-1}\nfi\nfile=\"$1/$value\"\nSTATUS=$(status $file)\nif [ $STATUS -eq 301  ]\nthen\npullr $file\nelse\npull $file\nfi\ndone\nfi\n}\n"
-		fmt.Fprintf(w, pullrFunc)
-
 		//push
-		pushFunc := "push(){\ncurl -X POST -F \"file=@$1\" " + url + "/push\n}\n"
+		pushFunc := "function push([string]$file){\n$Uri = '" + url + "/push'\n$Form = @{file = Get-Item -Path $file}\n$Result = Invoke-WebRequest -Uri $Uri -Method Post -Form $Form\n}\n"
 		fmt.Fprintf(w, pushFunc)
 
-		//pushr
-		pushrFunc := "pushr(){\ntar -cf $1.tar $1 && curl -X POST -F \"file=@$1.tar\" " + url + "/pushr && rm $1.tar\n}\n"
-		fmt.Fprintf(w, pushrFunc)
-
 		//gtree
-		gtreeFunc := "gtree(){\ncurl " + url + "/gtree\n}\n"
+		gtreeFunc := "function gtree(){\n(Invoke-WebRequest -Uri " + url + "/gtree).Content\n}\n"
 		fmt.Fprintf(w, gtreeFunc)
 
+		//pushr
+		//pullr
 		//Completion
-		if cfg.Completion {
-			fmt.Fprintf(w, getCompletion(cfg.DownloadDir))
-		}
+
+	}
+}
+
+//Handler that output shortcut aimed for the target machines (source it). It is for windows machine with invoke-RestMethod
+func AliasWindowsPSInvokeREstMethodHandler(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		echoFunc := "function echy([string]$one) {echo $one}"
+		fmt.Fprintf(w, echoFunc)
+
+		url := cfg.Url
+
+		//pull
+		pullFunc := "function pull([string]$file){\n(curl " + url + "/pull/$file).Content > $file\n}\n"
+		fmt.Fprintf(w, pullFunc)
+	}
+}
+
+//Handler that output shortcut aimed for the target machines (source it). It is for windows machine in cmd.exe
+func AliasWindowsCmdHandler(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		echoFunc := "function echy([string]$one) {echo $one}"
+		fmt.Fprintf(w, echoFunc)
+
+		url := cfg.Url
+
+		//pull
+		pullFunc := "function pull([string]$file){\n(curl " + url + "/pull/$file).Content > $file\n}\n"
+		fmt.Fprintf(w, pullFunc)
 	}
 }
 
@@ -310,7 +290,9 @@ func InitHandlers(cfg *config.Config) {
 
 	//Alias endpoint
 	http.HandleFunc("/"+cfg.Secret+"/alias", AliasHandler(cfg))
-	http.HandleFunc("/"+cfg.Secret+"/aliaswin", AliasWindowsHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/aliaswinpsinvokeweb", AliasWindowsPSCurlHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/aliaswinpsinvokerest", AliasWindowsPSInvokeREstMethodHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/aliaswincmd", AliasWindowsCmdHandler(cfg))
 
 	//"Bidirectional" endpoint
 	http.Handle("/"+cfg.Secret+"/bidirectional/", bidirectionalHandler(http.StripPrefix("/"+cfg.Secret+"/bidirectional/", http.FileServer(http.Dir(cfg.BidirectionalDir))), cfg))

