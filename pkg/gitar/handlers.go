@@ -210,8 +210,9 @@ func getCompletion(dir string) (completions string) {
 	return completions
 }
 
-//Handler that output shortcut aimed for the target machines (source it). It is for windows machine with curl alias or Invoke-WebMethod
-func AliasWindowsPSCurlHandler(cfg *config.Config) http.HandlerFunc {
+//Handler that output shortcut aimed for the target machines (source it). It is for windows machine with powershell
+// An alternative to Invoke-WebRequest can be Invoke-RestMethod
+func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		url := cfg.Url
@@ -235,33 +236,18 @@ func AliasWindowsPSCurlHandler(cfg *config.Config) http.HandlerFunc {
 	}
 }
 
-//Handler that output shortcut aimed for the target machines (source it). It is for windows machine with invoke-RestMethod
-func AliasWindowsPSInvokeREstMethodHandler(cfg *config.Config) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-
-		echoFunc := "function echy([string]$one) {echo $one}"
-		fmt.Fprintf(w, echoFunc)
-
-		url := cfg.Url
-
-		//pull
-		pullFunc := "function pull([string]$file){\n(curl " + url + "/pull/$file).Content > $file\n}\n"
-		fmt.Fprintf(w, pullFunc)
-	}
-}
-
 //Handler that output shortcut aimed for the target machines (source it). It is for windows machine in cmd.exe
 func AliasWindowsCmdHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		echoFunc := "function echy([string]$one) {echo $one}"
-		fmt.Fprintf(w, echoFunc)
+		// echoFunc := "function echy([string]$one) {echo $one}"
+		// fmt.Fprintf(w, echoFunc)
 
-		url := cfg.Url
+		// url := cfg.Url
 
-		//pull
-		pullFunc := "function pull([string]$file){\n(curl " + url + "/pull/$file).Content > $file\n}\n"
-		fmt.Fprintf(w, pullFunc)
+		// //pull
+		// pullFunc := "function pull([string]$file){\n(curl " + url + "/pull/$file).Content > $file\n}\n"
+		// fmt.Fprintf(w, pullFunc)
 	}
 }
 
@@ -290,8 +276,7 @@ func InitHandlers(cfg *config.Config) {
 
 	//Alias endpoint
 	http.HandleFunc("/"+cfg.Secret+"/alias", AliasHandler(cfg))
-	http.HandleFunc("/"+cfg.Secret+"/aliaswinpsinvokeweb", AliasWindowsPSCurlHandler(cfg))
-	http.HandleFunc("/"+cfg.Secret+"/aliaswinpsinvokerest", AliasWindowsPSInvokeREstMethodHandler(cfg))
+	http.HandleFunc("/"+cfg.Secret+"/aliaswinps", AliasWindowsPS(cfg))
 	http.HandleFunc("/"+cfg.Secret+"/aliaswincmd", AliasWindowsCmdHandler(cfg))
 
 	//"Bidirectional" endpoint

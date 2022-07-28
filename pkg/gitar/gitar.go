@@ -119,13 +119,14 @@ func SetUpMessage(config *config.Config) {
 	setUpMsg := setUpMsgLinux
 	if config.Windows {
 		setUpMsgWindows := color.BlueForeground("Powershell:")
-		setUpMsgWindows += "\n(Invoke-WebRequest " + config.Url + "/aliaswinpsinvokeweb).Content | iex "
-		setUpMsgWindows += color.Dim("\nInvoke-WebRequest " + config.Url + "/aliaswinpsinvokeweb -OutFile ./alias.ps1 && . ./alias.ps1 && del ./alias.ps1")
+		setUpMsgWindows += "\n(Invoke-WebRequest " + config.Url + "/aliaswinps).Content | iex "
+		setUpMsgWindows += color.Dim("\nInvoke-WebRequest " + config.Url + "/aliaswinps -OutFile ./alias.ps1 && . ./alias.ps1 && del ./alias.ps1")
 		// setUpMsgWindows += "\nInvoke-RestMethod " + config.Url + "/aliaswinpsinvokeres | iex " + color.Dim("(in-memory execution)")
 		// setUpMsgWindows += "\nInvoke-RestMethod " + config.Url + "/aliaswinpsinvokeres > ./alias.ps1 && . ./alias.ps1 && del ./alias.ps1 "
 		setUpMsgWindows += "\n"
 		setUpMsgWindows += color.YellowForeground("CMD.exe:")
 		setUpMsgWindows += "\nto do.."
+		// setUpMsgWindows += "\ncurl -s " + config.Url + "/aliaswincmd"
 		setUpMsg = setUpMsgWindows
 	}
 
