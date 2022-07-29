@@ -210,6 +210,62 @@ func getCompletion(dir string) (completions string) {
 	return completions
 }
 
+//Return the completion command for Powershell
+// Thanks to: https://stackoverflow.com/questions/33497205/custom-powershell-tab-completion-for-a-specific-command
+func getCompletionPS(dir string) (completions string) {
+	//retrieve all file & directory of dir
+	var files string
+	var directories string
+	err := filepath.Walk(dir,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			//withdraw dir prefix to be consistent with handler endpoint
+			if dir != "." {
+				path = strings.Replace(path, dir+"/", "", 1)
+			}
+
+			if !info.IsDir() {
+				if files == "" {
+					files = "'" + path + "'"
+				} else {
+					files += ",'" + path + "'"
+				}
+			} else {
+				directories = directories + " " + path
+			}
+			return nil
+		})
+	check.Check(err, "Failed retrieving files for completion")
+
+	//create completion lines
+	pullC := `
+	$scriptBlock = {
+		param(
+			$commandName, $parameterName, $wordToComplete,
+			$commandAst, $fakeBoundParameters
+		)
+		$values =` + files + `
+		foreach ($val in $values) {
+			if ($val -like "$wordToComplete*") {
+				$val
+			}
+		}
+	}
+	Register-ArgumentCompleter -CommandName pull -ParameterName file -ScriptBlock $scriptBlock
+	`
+	//pullrC := "complete -W \"" + directories + "\" pullr"
+	// completionLines := []string{pullC, pullrC}
+
+	// for i := 0; i < len(completionLines); i++ {
+	// 	completions += completionLines[i] + "\n"
+	// }
+	completions = pullC
+
+	return completions
+}
+
 //Handler that output shortcut aimed for the target machines (source it). It is for windows machine with powershell
 // An alternative to Invoke-WebRequest can be Invoke-RestMethod
 func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
@@ -218,7 +274,7 @@ func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
 		url := cfg.Url
 
 		//pull
-		pullFunc := "function pull([string]$file){\nInvoke-WebRequest " + url + "/pull/$file -OutFile $file\n}\n"
+		pullFunc := "function pull([string]$file){\n$full = ($file).Split(\"/\")\n[array]::Reverse($full)\n$short=$full[0]\nInvoke-WebRequest " + url + "/pull/$file -OutFile $short\n}\n"
 		fmt.Fprintf(w, pullFunc)
 
 		//push
@@ -229,9 +285,14 @@ func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
 		gtreeFunc := "function gtree(){\n(Invoke-WebRequest -Uri " + url + "/gtree).Content\n}\n"
 		fmt.Fprintf(w, gtreeFunc)
 
+		//completion
+		if cfg.Completion {
+			fmt.Fprintf(w, getCompletionPS(cfg.DownloadDir))
+		}
+
+		//TODO:
 		//pushr
 		//pullr
-		//Completion
 
 	}
 }
@@ -240,14 +301,25 @@ func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
 func AliasWindowsCmdHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		// echoFunc := "function echy([string]$one) {echo $one}"
-		// fmt.Fprintf(w, echoFunc)
+		url := cfg.Url
 
-		// url := cfg.Url
+		//pull
+		//TODO: withdraw '/' in filename ($1)
+		pullFunc := "pull=curl -s " + url + "/pull/$1 > $1\n"
+		fmt.Fprintf(w, pullFunc)
 
-		// //pull
-		// pullFunc := "function pull([string]$file){\n(curl " + url + "/pull/$file).Content > $file\n}\n"
-		// fmt.Fprintf(w, pullFunc)
+		//push
+		pushFunc := "push=curl -X POST -F \"file=@$1\" " + url + "/push\n"
+		fmt.Fprintf(w, pushFunc)
+
+		//gtree
+		gtreeFunc := "gtree=curl " + url + "/gtree\n"
+		fmt.Fprintf(w, gtreeFunc)
+
+		//TODO:
+		//pullr
+		//pushr
+		//completion
 	}
 }
 

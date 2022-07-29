@@ -125,8 +125,7 @@ func SetUpMessage(config *config.Config) {
 		// setUpMsgWindows += "\nInvoke-RestMethod " + config.Url + "/aliaswinpsinvokeres > ./alias.ps1 && . ./alias.ps1 && del ./alias.ps1 "
 		setUpMsgWindows += "\n"
 		setUpMsgWindows += color.YellowForeground("CMD.exe:")
-		setUpMsgWindows += "\nto do.."
-		// setUpMsgWindows += "\ncurl -s " + config.Url + "/aliaswincmd"
+		setUpMsgWindows += "\ncurl -s " + config.Url + "/aliaswincmd > alias && doskey /macrofile=alias && del alias"
 		setUpMsg = setUpMsgWindows
 	}
 
