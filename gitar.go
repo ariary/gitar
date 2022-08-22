@@ -160,7 +160,7 @@ func main() {
 				if err != nil {
 					panic(err)
 				}
-				if len(statics)>0 {
+				if len(statics) > 0 {
 					fmt.Println("--serve/-f option cannot be used with --proxy")
 					os.Exit(92)
 				}
@@ -177,6 +177,7 @@ func main() {
 	webhookCmd.PersistentFlags().StringVarP(&port, "port", "p", "9292", "specify webhook port")
 	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.Params, "params", "P", cfg.Params, "filter incoming request parameter. Can be used multiple times.")
 	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullBody, "body", "b", false, "print full body of POST request")
+	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullHeaders, "show-headers", "S", false, "print all the headers of the incoming request")
 	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.ReqHeaders, "request-header", "C", cfg.ReqHeaders, "catch request header Can be used multiple times")
 	webhookCmd.PersistentFlags().StringSliceVarP(&headers, "header", "H", headers, "add/override response header header (in form of name:value to add header OR to remove header: name:). Can be used multiple times.")
 	webhookCmd.PersistentFlags().StringSliceVarP(&statics, "serve", "f", statics, "specifiy folder to serve static file. Can be used multiple times. (can't be used with proxy mode)")

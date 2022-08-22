@@ -11,6 +11,7 @@ import (
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/go-utils/pkg/color"
+	stringSlice "github.com/ariary/go-utils/pkg/stringSlice"
 )
 
 // NewProxy takes target host and creates a reverse proxy
@@ -84,15 +85,27 @@ func ProcessRequest(req *http.Request, cfg *config.ConfigWebHook) {
 	log += path
 	// filter header
 	rHeaders := req.Header
-	for i := 0; i < len(cfg.ReqHeaders); i++ {
+	if cfg.FullHeaders { //print all headers
 		log += "\n"
-		value := rHeaders.Get(cfg.ReqHeaders[i])
-		if value != "" {
-			log += "\t" + color.Teal(cfg.ReqHeaders[i]) + ": " + value
-		} else {
-			log += "\t" + cfg.ReqHeaders[i] + " header was not found in request"
+		for header, value := range rHeaders {
+			if stringSlice.Contains(cfg.ReqHeaders, header) {
+				header = color.Teal(header)
+			}
+			log += header + ": " + strings.Join(value, ", ") + "\n"
+		}
+		log += "\t"
+	} else { //only print the specified ones
+		for i := 0; i < len(cfg.ReqHeaders); i++ {
+			log += "\n"
+			value := rHeaders.Get(cfg.ReqHeaders[i])
+			if value != "" {
+				log += "\t" + color.Teal(cfg.ReqHeaders[i]) + ": " + value
+			} else {
+				log += "\t" + cfg.ReqHeaders[i] + " header was not found in request"
+			}
 		}
 	}
+
 	// filter params & body
 	if cfg.FullBody {
 		if bodyB, err := ioutil.ReadAll(req.Body); err != nil {
