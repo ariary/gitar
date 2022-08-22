@@ -126,7 +126,7 @@ func main() {
 	scpCmd.PersistentFlags().BoolVarP(&withKey, "with-key", "k", false, "specify if authentatication scheme udes key instead of password")
 
 	//CMD WEBHOOK
-	var proxy string
+	var proxy, prefixStatic string
 	var headers, statics []string
 	cfg := config.ConfigWebHook{}
 	var webhookCmd = &cobra.Command{
@@ -144,13 +144,13 @@ func main() {
 					mux.Handle("/", webhook.Middleware(finalHandler, &cfg))
 				} else {
 					for i := 0; i < len(statics); i++ {
-						fileHandler := http.FileServer(http.Dir(statics[i]))
+						fileHandler := http.StripPrefix("/"+prefixStatic, http.FileServer(http.Dir(statics[i])))
 						finalHandler := webhook.ProcessResponseHandler(fileHandler, &cfg)
 						mux.Handle("/", webhook.Middleware(finalHandler, &cfg))
 					}
 				}
 
-				webhookBanner(cfg, port, statics)
+				webhookBanner(cfg, port, statics, prefixStatic)
 				err := http.ListenAndServe(":"+port, mux)
 				log.Fatal(err)
 			} else {
@@ -164,7 +164,7 @@ func main() {
 					fmt.Println("--serve/-f option cannot be used with --proxy")
 					os.Exit(92)
 				}
-				webhookBanner(cfg, port, statics)
+				webhookBanner(cfg, port, statics, prefixStatic)
 				http.HandleFunc("/", webhook.ProxyRequestHandler(proxy))
 				log.Fatal(http.ListenAndServe(":"+port, nil))
 			}
@@ -181,6 +181,7 @@ func main() {
 	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.ReqHeaders, "request-header", "C", cfg.ReqHeaders, "catch request header Can be used multiple times")
 	webhookCmd.PersistentFlags().StringSliceVarP(&headers, "header", "H", headers, "add/override response header header (in form of name:value to add header OR to remove header: name:). Can be used multiple times.")
 	webhookCmd.PersistentFlags().StringSliceVarP(&statics, "serve", "f", statics, "specifiy folder to serve static file. Can be used multiple times. (can't be used with proxy mode)")
+	webhookCmd.PersistentFlags().StringVarP(&prefixStatic, "override-prefix", "o", prefixStatic, "specify the prefix path for static file. (if --serve is used)")
 	//TODO: full request + status code
 
 	// SUBCOMMANDS
@@ -191,7 +192,7 @@ func main() {
 
 }
 
-func webhookBanner(cfg config.ConfigWebHook, port string, statics []string) {
+func webhookBanner(cfg config.ConfigWebHook, port string, statics []string, prefix string) {
 	//params
 	if len(cfg.Params) > 0 {
 		fmt.Println(color.BlueForeground("👁️ Catch request parameters:"))
@@ -225,7 +226,10 @@ func webhookBanner(cfg config.ConfigWebHook, port string, statics []string) {
 	}
 	//static files
 	if len(statics) > 0 {
-		fmt.Println(color.YellowForeground("📁 Serving static folders:"))
+		if prefix != "" {
+			prefix = color.Italic(" (URL prefix path of static files: " + prefix + ")")
+		}
+		fmt.Println(color.YellowForeground("📁 Serving static folders:", prefix))
 		for i := 0; i < len(statics); i++ {
 			if path, err := filepath.Abs(statics[i]); err == nil {
 				fmt.Println("  • " + path)
