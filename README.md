@@ -143,7 +143,7 @@ gtrbidi.docker
 * Only work for file (does not work for `pullr` and `pushr`)
 * Increase considerably the number of http requests on target
 
-### Load shortcut directly in your reverse shell
+### Load shortcut directly in your bind shell
 
 **~>** *Below are the steps to have shortcuts directly embedded in your `nc` reverse shell*
 
@@ -160,7 +160,7 @@ On **Attacker machine**:
 
 An alternative is `export CMD=[CTRL+V] && (echo $CMD && cat) | nc [VICTIM_IP] 4444` *(Note: with `cat` you will not benefit of bash completion)*
 
-**And enjoy you revshell [🎶](#tldr---and-listen-music)**
+**And enjoy you bindshell [🎶](#tldr---and-listen-music)**
 
 
 	
