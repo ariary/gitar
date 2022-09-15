@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ariary/gitar/pkg/config"
@@ -17,7 +18,7 @@ import (
 )
 
 //InitGitar: initialize configuration structs according to flags
-func InitGitar(serverIp string, detectExternal bool, windows bool, bidirectional bool, bidiDir string, port string, dlDir string, upDir string, copyArg bool, tls bool, certDir string, completion bool, aliasUrl string, secret string, noRun bool) (cfg *config.Config) {
+func InitGitar(serverIp string, detectExternal bool, windows bool, bidirectional bool, bidiDir string, port string, dlDir string, upDir string, copyArg bool, tls bool, certDir string, completion bool, aliasUrl string, secret string, noRun bool, redirectedPort string) (cfg *config.Config) {
 	if serverIp == "" { //no ip provided
 		var err error
 		if detectExternal { //use external IP
@@ -108,7 +109,7 @@ func InitGitar(serverIp string, detectExternal bool, windows bool, bidirectional
 		url = protocol + ip + ":" + p + "/" + secret
 	}
 
-	cfg = &config.Config{ServerIP: serverIp, Port: port, DownloadDir: dlDir, UploadDir: upDir + "/", IsCopied: copyArg, Tls: tls, Url: url, Completion: completion, Secret: secret, BidirectionalDir: mktempDir, Windows: windows, CertDir: certDir, NoRun: noRun}
+	cfg = &config.Config{ServerIP: serverIp, Port: port, DownloadDir: dlDir, UploadDir: upDir + "/", IsCopied: copyArg, Tls: tls, Url: url, Completion: completion, Secret: secret, BidirectionalDir: mktempDir, Windows: windows, CertDir: certDir, NoRun: noRun, RedirectedPort: redirectedPort}
 
 	return cfg
 }
@@ -129,6 +130,12 @@ func SetUpMessage(config *config.Config) {
 		setUpMsg = setUpMsgWindows
 	}
 
+	// port forwarding & server shutdown
+	if !config.NoRun && config.RedirectedPort != "" {
+		setUpMsg += "\n\n🪦 To shutdown server " + color.Red(config.Url+"/shutdown") + " ⏩ TCP traffic will then be forwarded to local port " + color.Cyan(config.RedirectedPort)
+	}
+
+	// print mesage
 	if !config.NoRun {
 		fmt.Println("Set up gitar exchange on remote:")
 	}
@@ -140,20 +147,41 @@ func SetUpMessage(config *config.Config) {
 	if config.IsCopied {
 		clipboard.Copy(setUpMsg)
 	}
+
 }
 
 func LaunchGitar(config *config.Config) {
-	//handlers
+	//define handlers
 	InitHandlers(config)
 
-	//Listen
-	var err error
-	if config.Tls {
-		err = http.ListenAndServeTLS(":"+config.Port, config.CertDir+"/server.crt", config.CertDir+"/server.key", nil)
-	} else {
-		err = http.ListenAndServe(":"+config.Port, nil)
-	}
-	if err != nil {
-		log.Fatal(err)
-	}
+	//Listen & serve (wait group to be able to shutdown server)
+	httpServerExitDone := &sync.WaitGroup{}
+	httpServerExitDone.Add(1)
+	config.Server = startHttpServer(httpServerExitDone, *config)
+
+	// wait for goroutine started in startHttpServer() to stop
+	httpServerExitDone.Wait()
+}
+
+//startHttpServer: look at the config (port, certificates, etc), start a server and return the instance
+func startHttpServer(wg *sync.WaitGroup, config config.Config) *http.Server {
+
+	srv := &http.Server{Addr: ":" + config.Port}
+	go func() {
+		defer wg.Done()
+
+		if config.Tls {
+			if err := srv.ListenAndServeTLS(config.CertDir+"/server.crt", config.CertDir+"/server.key"); err != http.ErrServerClosed {
+				log.Fatalf("ListenAndServeTLS(): %v", err)
+			}
+		} else {
+			// always returns error. ErrServerClosed on graceful close
+			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+				log.Fatalf("ListenAndServe(): %v", err)
+			}
+		}
+	}()
+
+	// returning reference so caller can call Shutdown()
+	return srv
 }

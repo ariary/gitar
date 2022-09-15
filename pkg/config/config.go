@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -21,6 +22,8 @@ type Config struct {
 	BidirectionalDir string
 	Windows          bool
 	NoRun            bool
+	RedirectedPort   string
+	Server           *http.Server
 }
 
 type ConfigScp struct {

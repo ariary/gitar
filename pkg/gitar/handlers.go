@@ -1,6 +1,7 @@
 package gitar
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -333,6 +334,18 @@ func TreeHandler(cfg *config.Config) http.HandlerFunc {
 	}
 }
 
+// TREE //
+//Handler that print the tree of the file server
+func ShutdownHandler(cfg *config.Config) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "🪖 well received boss !")
+		fmt.Println(color.Red("/shutdown endpoint has been reached"), "... killing the server ...")
+		if err := cfg.Server.Shutdown(context.TODO()); err != nil {
+			panic(err) // failure/timeout shutting down the server gracefully
+		}
+	}
+}
+
 // INIT //
 
 func InitHandlers(cfg *config.Config) {
@@ -356,4 +369,8 @@ func InitHandlers(cfg *config.Config) {
 
 	//Tree endpoint
 	http.HandleFunc("/"+cfg.Secret+"/gtree", TreeHandler(cfg))
+
+	if cfg.RedirectedPort != "" {
+		http.HandleFunc("/"+cfg.Secret+"/shutdown", ShutdownHandler(cfg))
+	}
 }

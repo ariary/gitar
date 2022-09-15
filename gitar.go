@@ -19,21 +19,24 @@ import (
 
 func main() {
 	var detectExternal, windows, bidirectional, copyArg, tls, completion, noRun bool
-	var serverIp, bidiDir, port, dlDir, upDir, certDir, aliasUrl, secret string
+	var serverIp, bidiDir, port, dlDir, upDir, certDir, aliasUrl, secret, redirectedPort string
 
 	//CMD ROOT
 	var rootCmd = &cobra.Command{Use: "gitar",
 		Short: "Launch an HTTP server to ease file sharing",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Init
-			config := gitar.InitGitar(serverIp, detectExternal, windows, bidirectional, bidiDir, port, dlDir, upDir, copyArg, tls, certDir, completion, aliasUrl, secret, noRun)
+			config := gitar.InitGitar(serverIp, detectExternal, windows, bidirectional, bidiDir, port, dlDir, upDir, copyArg, tls, certDir, completion, aliasUrl, secret, noRun, redirectedPort)
 
 			//Set up messages
 			//setUpMsgLinux := "curl -s " + url + "/alias > /tmp/alias && . /tmp/alias && rm /tmp/alias"
 			gitar.SetUpMessage(config)
 
-			// Launch
+			// Launch gitar HTTP server
 			gitar.LaunchGitar(config)
+
+			// if port redirection is used, perform it
+			gitar.PortForwarding(config)
 		},
 	}
 
@@ -52,6 +55,7 @@ func main() {
 	rootCmd.Flags().StringVarP(&aliasUrl, "alias-override-url ", "a", "", "override url in /alias endpoint (useful if gitar server is behind a proxy)")
 	rootCmd.Flags().StringVarP(&secret, "secret", "s", "", "provide the secret that will prefix URL paths. (by default: auto-generated)")
 	rootCmd.Flags().BoolVarP(&noRun, "dry-run", "", false, "do not launch gitar server, only return command to load shortcuts")
+	rootCmd.Flags().StringVarP(&redirectedPort, "port-forward", "f", "", "set-up handler to shutdown server, once server is shutdown all tcp traffic is redirect to specified port")
 
 	//CMD SEND
 	var host string
@@ -179,7 +183,7 @@ func main() {
 	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullBody, "body", "b", false, "print full body of POST request")
 	webhookCmd.PersistentFlags().BoolVarP(&cfg.FullHeaders, "show-headers", "S", false, "print all the headers of the incoming request")
 	webhookCmd.PersistentFlags().StringSliceVarP(&cfg.ReqHeaders, "request-header", "C", cfg.ReqHeaders, "catch request header Can be used multiple times")
-	webhookCmd.PersistentFlags().StringSliceVarP(&headers, "header", "H", headers, "add/override response header header (in form of name:value to add header OR to remove header: name:). Can be used multiple times.")
+	webhookCmd.PersistentFlags().StringSliceVarP(&headers, "header", "H", headers, "add/override response header (in form of name:value to add header OR to remove header: name:). Can be used multiple times.")
 	webhookCmd.PersistentFlags().StringSliceVarP(&statics, "serve", "f", statics, "specifiy folder to serve static file. Can be used multiple times. (can't be used with proxy mode)")
 	webhookCmd.PersistentFlags().StringVarP(&prefixStatic, "override-prefix", "o", prefixStatic, "specify the prefix path for static file. (if --serve is used)")
 	//TODO: full request + status code
