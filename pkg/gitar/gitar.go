@@ -104,7 +104,7 @@ func InitGitar(serverIp string, detectExternal bool, windows bool, bidirectional
 
 	var url string
 	if aliasUrl != "" {
-		url = aliasUrl + "/" + secret
+		url = protocol + aliasUrl + "/" + secret
 	} else {
 		url = protocol + ip + ":" + p + "/" + secret
 	}

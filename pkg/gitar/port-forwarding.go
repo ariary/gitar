@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/ariary/gitar/pkg/config"
 	"github.com/ariary/go-utils/pkg/color"
@@ -15,7 +16,8 @@ import (
 //PortForwarding: forward all tcp port to specified port in config
 func PortForwarding(config *config.Config) {
 	fmt.Println()
-	fmt.Println("Redirect all tcp traffic from", config.Port, "to", config.RedirectedPort)
+	host := strings.Split(config.Url, "/")[2]
+	fmt.Println(color.Info("Redirect all tcp traffic:"), host, "⏩ localhost:"+config.RedirectedPort)
 	// signals := make(chan os.Signal, 1)
 	// stop := make(chan bool)
 	// signal.Notify(signals, os.Interrupt)
