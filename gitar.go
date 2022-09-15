@@ -45,7 +45,7 @@ func main() {
 	rootCmd.Flags().BoolVarP(&detectExternal, "detect-external", "i", false, "detect external ip and use it for gitar shortcut. If use with -e, the value of -e flag will be overwritten")
 	rootCmd.Flags().BoolVarP(&windows, "windows", "w", false, "specify that the target machine is a window")
 	rootCmd.Flags().StringVarP(&bidiDir, "bidi", "b", "", "bidirectional exchange: push file on target from the attacker machine without installing anything on target")
-	rootCmd.Flags().StringVarP(&port, "port", "p", "9237", "specify HTTP server port")
+	rootCmd.Flags().StringVarP(&port, "port", "p", "9292", "specify HTTP server port")
 	rootCmd.Flags().StringVarP(&dlDir, "dl-dir", "d", ".", "point to the directory of static files to serve")
 	rootCmd.Flags().StringVarP(&upDir, "up-dir", "u", "./", "point to the directory where file are uploaded")
 	rootCmd.Flags().BoolVarP(&copyArg, "copy", "c", true, "copy gitar set up command to clipboard (xclip required). True by default, disable with --copy=false")

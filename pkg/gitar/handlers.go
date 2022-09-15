@@ -339,10 +339,12 @@ func TreeHandler(cfg *config.Config) http.HandlerFunc {
 func ShutdownHandler(cfg *config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "🪖 well received boss !")
-		fmt.Println(color.Red("/shutdown endpoint has been reached"), "... killing the server ...")
-		if err := cfg.Server.Shutdown(context.TODO()); err != nil {
-			panic(err) // failure/timeout shutting down the server gracefully
-		}
+		go func() { //without goroutine response won't be written
+			fmt.Println(color.Red("/shutdown endpoint has been reached"), "... killing the server ...")
+			if err := cfg.Server.Shutdown(context.TODO()); err != nil {
+				panic(err) // failure/timeout shutting down the server gracefully
+			}
+		}()
 	}
 }
 
