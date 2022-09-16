@@ -108,7 +108,6 @@ func InitGitar(serverIp string, detectExternal bool, windows bool, bidirectional
 	} else {
 		url = protocol + ip + ":" + p + "/" + secret
 	}
-	fmt.Println(url)
 
 	cfg = &config.Config{ServerIP: serverIp, Port: port, DownloadDir: dlDir, UploadDir: upDir + "/", IsCopied: copyArg, Tls: tls, Url: url, Completion: completion, Secret: secret, BidirectionalDir: mktempDir, Windows: windows, CertDir: certDir, NoRun: noRun, RedirectedPort: redirectedPort}
 
