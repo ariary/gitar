@@ -1,7 +1,6 @@
 package config
 
 import (
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -71,7 +70,9 @@ func ParseHeadersFromCLI(headers []string) (nHeaders map[string][]string, dHeade
 		case 1:
 			dHeaders = append(dHeaders, headerValue[0])
 		default:
-			log.Fatal("Wrong argument for -H, --header flag: [header]:[value] or [header]: or [header]")
+			//if ":" in header value
+			// log.Fatal("Wrong argument for -H, --header flag: [header]:[value] or [header]: or [header]")
+			nHeaders[headerValue[0]] = append(nHeaders[headerValue[0]], strings.Join(headerValue[1:], ":"))
 		}
 	}
 
