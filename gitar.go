@@ -206,7 +206,7 @@ func webhookBanner(cfg config.ConfigWebHook, port string, statics []string, pref
 		fmt.Println()
 	}
 	//header
-	if len(cfg.Params) > 0 {
+	if len(cfg.ReqHeaders) > 0 {
 		fmt.Println(color.BlueForeground("👁️ Catch request headers:"))
 		for i := 0; i < len(cfg.ReqHeaders); i++ {
 			fmt.Println("  • " + cfg.ReqHeaders[i])
