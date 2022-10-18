@@ -115,20 +115,28 @@ func ProcessRequest(req *http.Request, cfg *config.ConfigWebHook) {
 		}
 	} else {
 		var param string
-		req.ParseForm()
-		for i := 0; i < len(cfg.Params); i++ {
-			log += "\n"
-			if req.Method == "GET" {
-				param = req.URL.Query().Get(cfg.Params[i])
-			} else {
-				param = req.PostForm.Get(cfg.Params[i])
-			}
-			if param != "" {
-				log += "\t" + color.Teal(cfg.Params[i]) + ": " + param
-			} else {
-				log += "\t" + color.Dim(cfg.Params[i]) + ": "
+		// avoid error message: 2022/10/18 12:16:40 http: URL query contains semicolon, which is no longer a supported separator; parts of the query may be stripped when parsed; see golang.org/issue/25192
+		// which often happens when sending cookie not encoded
+		if strings.Contains(req.URL.RawQuery, ";") {
+			log += color.Italic(color.Evil("\n\tfound ; in query string: print url without parsing it\n"))
+			log += "\t" + color.Teal("raw url query: ") + req.URL.RawQuery
+		} else {
+			req.ParseForm()
+			for i := 0; i < len(cfg.Params); i++ {
+				log += "\n"
+				if req.Method == "GET" {
+					param = req.URL.Query().Get(cfg.Params[i])
+				} else {
+					param = req.PostForm.Get(cfg.Params[i])
+				}
+				if param != "" {
+					log += "\t" + color.Teal(cfg.Params[i]) + ": " + param
+				} else {
+					log += "\t" + color.Dim(cfg.Params[i]) + ": "
+				}
 			}
 		}
+
 	}
 	fmt.Println(log)
 }
