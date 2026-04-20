@@ -37,7 +37,7 @@ func UploadFile(upDir string, w http.ResponseWriter, r *http.Request) {
 	_, err = io.Copy(buf, file)
 	check.Check(err, "")
 
-	upFilename := upDir + handler.Filename
+	upFilename := filepath.Join(upDir, filepath.Base(handler.Filename))
 	f, err := os.Create(upFilename)
 	check.Check(err, "Error creating file")
 
@@ -58,15 +58,16 @@ func UntarDirectory(upDir string, w http.ResponseWriter, r *http.Request) {
 
 	defer file.Close()
 
-	filename := handler.Filename[:strings.LastIndex(handler.Filename, ".")] //handler.Filename - .tar
+	baseName := filepath.Base(handler.Filename)
+	filename := baseName[:strings.LastIndex(baseName, ".")] // strip .tar
 	fmt.Printf("Upload Directory: %+v\n", color.Bold(filename))
-	filename = upDir + filename
+	filename = filepath.Join(upDir, filename)
 
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
 	check.Check(err, "")
 	//write file
-	upFilename := upDir + handler.Filename
+	upFilename := filepath.Join(upDir, baseName)
 	f, err := os.Create(upFilename)
 	check.Check(err, "Error creating file")
 

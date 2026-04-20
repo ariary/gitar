@@ -42,6 +42,31 @@ func TestUploadZipDirectory(t *testing.T) {
 	}
 }
 
+func TestUploadFilePathTraversal(t *testing.T) {
+	upDir := t.TempDir() + "/"
+
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	fw, _ := mw.CreateFormFile("file", "../../evil.txt")
+	fw.Write([]byte("malicious"))
+	mw.Close()
+
+	req := httptest.NewRequest("POST", "/push", &body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	w := httptest.NewRecorder()
+
+	UploadFile(upDir, w, req)
+
+	// File must land inside upDir, not at ../../evil.txt
+	if _, err := os.Stat(filepath.Join(upDir, "evil.txt")); os.IsNotExist(err) {
+		t.Error("file was not created in upload directory")
+	}
+	// Confirm it did NOT traverse up
+	if _, err := os.Stat("../../evil.txt"); !os.IsNotExist(err) {
+		t.Fatal("path traversal: file created outside upload directory")
+	}
+}
+
 func TestUnzipDirPathTraversal(t *testing.T) {
 	// Build a zip with a path-traversal entry
 	var zipBuf bytes.Buffer
