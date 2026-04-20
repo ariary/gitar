@@ -351,6 +351,9 @@ func InitHandlers(cfg *config.Config) {
 	//Upload directory route
 	http.HandleFunc("/"+cfg.Secret+"/pushr", UploadDirectoryHandler(cfg))
 
+	//Upload zip directory route (Windows PowerShell pushr)
+	http.HandleFunc("/"+cfg.Secret+"/pushrzip", UploadZipHandler(cfg))
+
 	//Download route
 	//http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir))))
 	http.Handle("/"+cfg.Secret+"/pull/", DownloadHandler(http.StripPrefix("/"+cfg.Secret+"/pull/", http.FileServer(http.Dir(cfg.DownloadDir)))))
