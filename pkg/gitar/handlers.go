@@ -98,7 +98,7 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 			  setopt sh_word_split
 			fi
 			STATUS=$(status $1)
-			if [ $STATUS -eq 301 ]; then
+			if [ "$STATUS" -eq 301 ]; then
 				mkdir -p $1
 				FILES=$(getFiles "$1")
 				for value in $FILES
@@ -109,7 +109,7 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 					fi
 					file="$1/$value"
 					STATUS=$(status $file)
-					if [ $STATUS -eq 301 ]
+					if [ "$STATUS" -eq 301 ]
 					then
 						pullr $file
 					else
