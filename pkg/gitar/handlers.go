@@ -93,39 +93,33 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		fmt.Fprintf(w, isDirFunc)
 
 		pullrFunc := `pullr(){
-			STATUS=$(status $1)
-			if [ $STATUS -eq 301  ]
-				mkdir -p $1
-			then
-				FILES=$(getFiles "$1")
-			fi
-			#fix zsh bug
 			local IFS=$'\n'
 			if [ $ZSH_VERSION ]; then
 			  setopt sh_word_split
 			fi
-			
-			for value in $FILES
-			do
-				if isDir $value
-				then
-					value=${value::-1}
-				fi
-				file="$1/$value"
-				STATUS=$(status $file)
-				if [ $STATUS -eq 301  ]
-				then
-					# echo "$file"
-					pullr $file
-				else
-					# echo "$file"
-					pull $file
-					mv $value $file
-				fi
-			done
+			STATUS=$(status $1)
+			if [ $STATUS -eq 301 ]; then
+				mkdir -p $1
+				FILES=$(getFiles "$1")
+				for value in $FILES
+				do
+					if isDir $value
+					then
+						value=${value::-1}
+					fi
+					file="$1/$value"
+					STATUS=$(status $file)
+					if [ $STATUS -eq 301 ]
+					then
+						pullr $file
+					else
+						pull $file
+						mv $value $file
+					fi
+				done
+			fi
 			}
 			`
-		//pullrFunc := "pullr(){\nSTATUS=$(status $1)\nif [ $STATUS -eq 301  ]\nmkdir $1\nthen\nFILES=$(getFiles \"$1\")\nfor value in $FILES\ndo\nif isDir $value\nthen\nvalue=${value::-1}\nfi\nfile=\"$1/$value\"\nSTATUS=$(status $file)\nif [ $STATUS -eq 301  ]\nthen\npullr $file\nelse\npull $file\nfi\ndone\nfi\n}\n"
 		fmt.Fprintf(w, pullrFunc)
 
 		//push
