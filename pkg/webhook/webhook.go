@@ -1,8 +1,9 @@
 package webhook
 
 import (
+	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -108,12 +109,14 @@ func ProcessRequest(req *http.Request, cfg *config.ConfigWebHook) {
 
 	// filter params & body
 	if cfg.FullBody {
-		if bodyB, err := ioutil.ReadAll(req.Body); err != nil {
+		if bodyB, err := io.ReadAll(req.Body); err != nil {
 			fmt.Println(color.Red("error while reading request body"))
 		} else {
+			req.Body.Close()
+			req.Body = io.NopCloser(bytes.NewBuffer(bodyB))
 			log += "\n" + string(bodyB)
 		}
-	} else {
+	} else if len(cfg.Params) > 0 {
 		var param string
 		// avoid error message: 2022/10/18 12:16:40 http: URL query contains semicolon, which is no longer a supported separator; parts of the query may be stripped when parsed; see golang.org/issue/25192
 		// which often happens when sending cookie not encoded
@@ -136,7 +139,6 @@ func ProcessRequest(req *http.Request, cfg *config.ConfigWebHook) {
 				}
 			}
 		}
-
 	}
 	fmt.Println(log)
 }
