@@ -280,14 +280,36 @@ func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
 		gtreeFunc := "function gtree(){\n(Invoke-WebRequest -Uri " + url + "/gtree).Content\n}\n"
 		fmt.Fprintf(w, gtreeFunc)
 
+		//pullr
+		pullrFunc := "function pullr([string]$dir){\n" +
+			"$statusCode = try { (Invoke-WebRequest -Uri \"" + url + "/pull/$dir\" -MaximumRedirection 0 -ErrorAction Stop).StatusCode } catch { [int]$_.Exception.Response.StatusCode }\n" +
+			"if ($statusCode -eq 301) {\n" +
+			"New-Item -ItemType Directory -Force -Path $dir | Out-Null\n" +
+			"$content = (Invoke-WebRequest -Uri \"" + url + "/pull/$dir\").Content\n" +
+			"$entries = [regex]::Matches($content, 'href=\"([^\"?#][^\"]*)\"') | ForEach-Object { $_.Groups[1].Value }\n" +
+			"foreach ($entry in $entries) {\n" +
+			"if ($entry.EndsWith('/')) { pullr ($dir + '/' + $entry.TrimEnd('/')) }\n" +
+			"else { pull ($dir + '/' + $entry) }\n" +
+			"}\n" +
+			"}\n" +
+			"}\n"
+		fmt.Fprintf(w, pullrFunc)
+
+		//pushr
+		pushrFunc := "function pushr([string]$dir){\n" +
+			"$zip = \"$dir.zip\"\n" +
+			"Compress-Archive -Path $dir -DestinationPath $zip -Force\n" +
+			"$Uri = '" + url + "/pushrzip'\n" +
+			"$Form = @{file = Get-Item -Path $zip}\n" +
+			"Invoke-WebRequest -Uri $Uri -Method Post -Form $Form | Out-Null\n" +
+			"Remove-Item $zip\n" +
+			"}\n"
+		fmt.Fprintf(w, pushrFunc)
+
 		//completion
 		if cfg.Completion {
 			fmt.Fprintf(w, getCompletionPS(cfg.DownloadDir))
 		}
-
-		//TODO:
-		//pushr
-		//pullr
 
 	}
 }

@@ -43,6 +43,27 @@ func TestAliasScriptZshSyntax(t *testing.T) {
 	}
 }
 
+func TestAliasWindowsPSContainsPullrPushr(t *testing.T) {
+	cfg := &config.Config{
+		Url:         "http://127.0.0.1:9292/testsecret",
+		DownloadDir: t.TempDir(),
+		Completion:  false,
+	}
+	req := httptest.NewRequest("GET", "/testsecret/aliaswinps", nil)
+	w := httptest.NewRecorder()
+	AliasWindowsPS(cfg)(w, req)
+	script := w.Body.String()
+
+	for _, fn := range []string{"function pullr", "function pushr"} {
+		if !strings.Contains(script, fn) {
+			t.Errorf("Windows PS alias missing %q", fn)
+		}
+	}
+	if !strings.Contains(script, "pushrzip") {
+		t.Error("Windows PS pushr alias does not reference /pushrzip endpoint")
+	}
+}
+
 func TestAliasScriptContainsPullr(t *testing.T) {
 	script := aliasScript(t)
 	if !strings.Contains(script, "pullr()") {
