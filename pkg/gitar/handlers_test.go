@@ -64,6 +64,22 @@ func TestAliasWindowsPSContainsPullrPushr(t *testing.T) {
 	}
 }
 
+func TestAliasWindowsCmdContainsPullrPushr(t *testing.T) {
+	cfg := &config.Config{
+		Url: "http://127.0.0.1:9292/testsecret",
+	}
+	req := httptest.NewRequest("GET", "/testsecret/aliaswincmd", nil)
+	w := httptest.NewRecorder()
+	AliasWindowsCmdHandler(cfg)(w, req)
+	script := w.Body.String()
+
+	for _, macro := range []string{"pullr=", "pushr="} {
+		if !strings.Contains(script, macro) {
+			t.Errorf("Windows CMD alias missing %q", macro)
+		}
+	}
+}
+
 func TestAliasScriptContainsPullr(t *testing.T) {
 	script := aliasScript(t)
 	if !strings.Contains(script, "pullr()") {

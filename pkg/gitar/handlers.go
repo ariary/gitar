@@ -333,10 +333,13 @@ func AliasWindowsCmdHandler(cfg *config.Config) http.HandlerFunc {
 		gtreeFunc := "gtree=curl " + url + "/gtree\n"
 		fmt.Fprintf(w, gtreeFunc)
 
-		//TODO:
-		//pullr
-		//pushr
-		//completion
+		//pullr stub (CMD macros cannot recurse; direct users to PowerShell)
+		pullrFunc := "pullr=echo pullr: directory download not supported in CMD.exe - use PowerShell\n"
+		fmt.Fprintf(w, pullrFunc)
+
+		//pushr stub
+		pushrFunc := "pushr=echo pushr: directory upload not supported in CMD.exe - use PowerShell\n"
+		fmt.Fprintf(w, pushrFunc)
 	}
 }
 
