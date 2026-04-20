@@ -89,7 +89,11 @@ func main() {
 
 			//special case: directory
 			var flags string
-			fileInfo, _ := os.Stat(file)
+			fileInfo, err := os.Stat(file)
+			if err != nil {
+				fmt.Printf("Error: cannot access '%s': %s\n", file, err)
+				return
+			}
 			if fileInfo.IsDir() {
 				utils.Tar(file, filepath.Base(file)+".tar.gz")
 				file = filepath.Base(file) + ".tar.gz"

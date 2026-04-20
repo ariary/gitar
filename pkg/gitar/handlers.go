@@ -93,39 +93,33 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 		fmt.Fprintf(w, isDirFunc)
 
 		pullrFunc := `pullr(){
-			STATUS=$(status $1)
-			if [ $STATUS -eq 301  ]
-				mkdir -p $1
-			then
-				FILES=$(getFiles "$1")
-			fi
-			#fix zsh bug
 			local IFS=$'\n'
 			if [ $ZSH_VERSION ]; then
 			  setopt sh_word_split
 			fi
-			
-			for value in $FILES
-			do
-				if isDir $value
-				then
-					value=${value::-1}
-				fi
-				file="$1/$value"
-				STATUS=$(status $file)
-				if [ $STATUS -eq 301  ]
-				then
-					# echo "$file"
-					pullr $file
-				else
-					# echo "$file"
-					pull $file
-					mv $value $file
-				fi
-			done
+			STATUS=$(status $1)
+			if [ "$STATUS" -eq 301 ]; then
+				mkdir -p $1
+				FILES=$(getFiles "$1")
+				for value in $FILES
+				do
+					if isDir $value
+					then
+						value=${value::-1}
+					fi
+					file="$1/$value"
+					STATUS=$(status $file)
+					if [ "$STATUS" -eq 301 ]
+					then
+						pullr $file
+					else
+						pull $file
+						mv $value $file
+					fi
+				done
+			fi
 			}
 			`
-		//pullrFunc := "pullr(){\nSTATUS=$(status $1)\nif [ $STATUS -eq 301  ]\nmkdir $1\nthen\nFILES=$(getFiles \"$1\")\nfor value in $FILES\ndo\nif isDir $value\nthen\nvalue=${value::-1}\nfi\nfile=\"$1/$value\"\nSTATUS=$(status $file)\nif [ $STATUS -eq 301  ]\nthen\npullr $file\nelse\npull $file\nfi\ndone\nfi\n}\n"
 		fmt.Fprintf(w, pullrFunc)
 
 		//push
@@ -286,14 +280,36 @@ func AliasWindowsPS(cfg *config.Config) http.HandlerFunc {
 		gtreeFunc := "function gtree(){\n(Invoke-WebRequest -Uri " + url + "/gtree).Content\n}\n"
 		fmt.Fprintf(w, gtreeFunc)
 
+		//pullr
+		pullrFunc := "function pullr([string]$dir){\n" +
+			"$statusCode = try { (Invoke-WebRequest -Uri \"" + url + "/pull/$dir\" -MaximumRedirection 0 -ErrorAction Stop).StatusCode } catch { [int]$_.Exception.Response.StatusCode }\n" +
+			"if ($statusCode -eq 301) {\n" +
+			"New-Item -ItemType Directory -Force -Path $dir | Out-Null\n" +
+			"$content = (Invoke-WebRequest -Uri \"" + url + "/pull/$dir\").Content\n" +
+			"$entries = [regex]::Matches($content, 'href=\"([^\"?#][^\"]*)\"') | ForEach-Object { $_.Groups[1].Value }\n" +
+			"foreach ($entry in $entries) {\n" +
+			"if ($entry.EndsWith('/')) { pullr ($dir + '/' + $entry.TrimEnd('/')) }\n" +
+			"else { pull ($dir + '/' + $entry) }\n" +
+			"}\n" +
+			"}\n" +
+			"}\n"
+		fmt.Fprintf(w, pullrFunc)
+
+		//pushr
+		pushrFunc := "function pushr([string]$dir){\n" +
+			"$zip = \"$dir.zip\"\n" +
+			"Compress-Archive -Path $dir -DestinationPath $zip -Force\n" +
+			"$Uri = '" + url + "/pushrzip'\n" +
+			"$Form = @{file = Get-Item -Path $zip}\n" +
+			"Invoke-WebRequest -Uri $Uri -Method Post -Form $Form | Out-Null\n" +
+			"Remove-Item $zip\n" +
+			"}\n"
+		fmt.Fprintf(w, pushrFunc)
+
 		//completion
 		if cfg.Completion {
 			fmt.Fprintf(w, getCompletionPS(cfg.DownloadDir))
 		}
-
-		//TODO:
-		//pushr
-		//pullr
 
 	}
 }
@@ -317,10 +333,13 @@ func AliasWindowsCmdHandler(cfg *config.Config) http.HandlerFunc {
 		gtreeFunc := "gtree=curl " + url + "/gtree\n"
 		fmt.Fprintf(w, gtreeFunc)
 
-		//TODO:
-		//pullr
-		//pushr
-		//completion
+		//pullr stub (CMD macros cannot recurse; direct users to PowerShell)
+		pullrFunc := "pullr=echo pullr: directory download not supported in CMD.exe - use PowerShell\n"
+		fmt.Fprintf(w, pullrFunc)
+
+		//pushr stub
+		pushrFunc := "pushr=echo pushr: directory upload not supported in CMD.exe - use PowerShell\n"
+		fmt.Fprintf(w, pushrFunc)
 	}
 }
 
@@ -356,6 +375,9 @@ func InitHandlers(cfg *config.Config) {
 
 	//Upload directory route
 	http.HandleFunc("/"+cfg.Secret+"/pushr", UploadDirectoryHandler(cfg))
+
+	//Upload zip directory route (Windows PowerShell pushr)
+	http.HandleFunc("/"+cfg.Secret+"/pushrzip", UploadZipHandler(cfg))
 
 	//Download route
 	//http.Handle("/pull/", http.StripPrefix("/pull/", http.FileServer(http.Dir(cfg.DownloadDir))))

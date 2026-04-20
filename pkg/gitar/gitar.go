@@ -166,7 +166,12 @@ func LaunchGitar(config *config.Config) {
 //startHttpServer: look at the config (port, certificates, etc), start a server and return the instance
 func startHttpServer(wg *sync.WaitGroup, config config.Config) *http.Server {
 
-	srv := &http.Server{Addr: ":" + config.Port}
+	srv := &http.Server{
+		Addr:        ":" + config.Port,
+		ReadTimeout: 30 * time.Second,
+		// WriteTimeout intentionally omitted: FileServer transfers can exceed any fixed limit.
+		IdleTimeout: 120 * time.Second,
+	}
 	go func() {
 		defer wg.Done()
 
