@@ -89,3 +89,33 @@ func TestAliasScriptContainsPullr(t *testing.T) {
 		t.Error("alias script missing pushr function")
 	}
 }
+
+func TestPullrZshCompatibleSliceOperator(t *testing.T) {
+	script := aliasScript(t)
+	// ${value::-1} is bash-only; ${value%/} is portable across bash and zsh
+	if strings.Contains(script, "${value::-1}") {
+		t.Error("pullr uses bash-only ${value::-1}; should use ${value%/} for zsh compatibility")
+	}
+	// The Go source uses %%/ (to escape % for Fprintf); the output should be %/
+	if !strings.Contains(script, "${value%/}") {
+		t.Errorf("pullr missing portable ${value%%/} to strip trailing slash; script:\n%s", script)
+	}
+}
+
+func TestPullrVariablesAreQuoted(t *testing.T) {
+	script := aliasScript(t)
+	// Variables passed to functions should be quoted to handle paths with spaces
+	for _, want := range []string{
+		`status "$1"`,
+		`mkdir -p "$1"`,
+		`isDir "$value"`,
+		`status "$file"`,
+		`pullr "$file"`,
+		`pull "$file"`,
+		`mv "$value" "$file"`,
+	} {
+		if !strings.Contains(script, want) {
+			t.Errorf("pullr missing quoted variable usage: %s", want)
+		}
+	}
+}

@@ -97,24 +97,24 @@ func AliasHandler(cfg *config.Config) http.HandlerFunc {
 			if [ $ZSH_VERSION ]; then
 			  setopt sh_word_split
 			fi
-			STATUS=$(status $1)
+			STATUS=$(status "$1")
 			if [ "$STATUS" -eq 301 ]; then
-				mkdir -p $1
+				mkdir -p "$1"
 				FILES=$(getFiles "$1")
 				for value in $FILES
 				do
-					if isDir $value
+					if isDir "$value"
 					then
-						value=${value::-1}
+						value=${value%%/}
 					fi
 					file="$1/$value"
-					STATUS=$(status $file)
+					STATUS=$(status "$file")
 					if [ "$STATUS" -eq 301 ]
 					then
-						pullr $file
+						pullr "$file"
 					else
-						pull $file
-						mv $value $file
+						pull "$file"
+						mv "$value" "$file"
 					fi
 				done
 			fi
