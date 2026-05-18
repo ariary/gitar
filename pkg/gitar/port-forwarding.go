@@ -1,11 +1,8 @@
 package gitar
 
 import (
-	"crypto/rand"
-	"crypto/tls"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"strings"
 
@@ -13,82 +10,18 @@ import (
 	"github.com/ariary/go-utils/pkg/color"
 )
 
-//PortForwarding: forward all tcp port to specified port in config
+//PortForwarding: forward all tcp port to specified port in config.
+// Always uses plain TCP regardless of the --tls flag: TLS is only
+// for the HTTP server phase. After shutdown the forwarder handles
+// raw TCP so that reverse shells, netcat, etc. work directly.
 func PortForwarding(config *config.Config) {
 	fmt.Println()
 	host := strings.Split(config.Url, "/")[2]
 	fmt.Println(color.Info("Redirect all tcp traffic:"), host, "⏩ localhost:"+config.RedirectedPort)
-	// signals := make(chan os.Signal, 1)
-	// stop := make(chan bool)
-	// signal.Notify(signals, os.Interrupt)
-	// go func() {
-	// 	for _ = range signals {
-	// 		fmt.Println("\nReceived an interrupt, stopping forwarding...")
-	// 		stop <- true
-	// 	}
-	// }()
 
-	// // Incoming request (set up listener)
-	// var incoming net.Listener
-	// var err error
-	// if config.Tls {
-	// 	//TODO: tls traffic is forwarded but does not seem to be decrypted when forwad
-	// 	cert, err := tls.LoadX509KeyPair(config.CertDir+"/server.crt", config.CertDir+"/server.key")
-	// 	if err != nil {
-	// 		log.Fatalf("server: loadkeys: %s", err)
-	// 	}
-	// 	tlsConfig := tls.Config{Certificates: []tls.Certificate{cert}}
-	// 	tlsConfig.Rand = rand.Reader
-	// 	incoming, err = tls.Listen("tcp", ":"+config.Port, &tlsConfig)
-	// 	if err != nil {
-	// 		log.Fatalf("could not start (TLS) port-forwarding server  on %s: %v", config.Port, err)
-	// 	}
-	// } else {
-	// 	incoming, err = net.Listen("tcp", ":"+config.Port)
-	// 	if err != nil {
-	// 		log.Fatalf("could not start port-forwarding server on %s: %v", config.Port, err)
-	// 	}
-	// }
-
-	// client, err := incoming.Accept()
-	// if err != nil {
-	// 	log.Fatal("could not accept client connection", err)
-	// }
-	// defer client.Close()
-	// //fmt.Printf(color.Italic(color.Info("Forward connection from '%v'!\n")), client.RemoteAddr())
-
-	// targetService, err := net.Dial("tcp", "localhost:"+config.RedirectedPort)
-	// if err != nil {
-	// 	log.Fatal("could not connect to target service", err)
-	// }
-	// defer targetService.Close()
-	// fmt.Printf(color.Italic(color.Info("Forward connection to '%v'!\n")), targetService.RemoteAddr())
-
-	// go func() { io.Copy(targetService, client) }()
-	// go func() { io.Copy(client, targetService) }()
-
-	// <-stop
-
-	// Incoming request (set up listener)
-	var proxy net.Listener
-	var err error
-	if config.Tls {
-		//TODO: tls traffic is forwarded but does not seem to be decrypted when forwad
-		cert, err := tls.LoadX509KeyPair(config.CertDir+"/server.crt", config.CertDir+"/server.key")
-		if err != nil {
-			log.Fatalf("server: loadkeys: %s", err)
-		}
-		tlsConfig := tls.Config{Certificates: []tls.Certificate{cert}}
-		tlsConfig.Rand = rand.Reader
-		proxy, err = tls.Listen("tcp", ":"+config.Port, &tlsConfig)
-		if err != nil {
-			log.Fatalf("could not start (TLS) port-forwarding server  on %s: %v", config.Port, err)
-		}
-	} else {
-		proxy, err = net.Listen("tcp", ":"+config.Port)
-		if err != nil {
-			panic(err)
-		}
+	proxy, err := net.Listen("tcp", ":"+config.Port)
+	if err != nil {
+		panic(err)
 	}
 
 	for {
